@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한 문장 일기장</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Gowun Dodum', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.12.16/dist/framer-motion.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #fb923c;
+            border-radius: 10px;
+        }
+
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
+            background: #F0F7FF;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .animate-pulse {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+        const { motion, AnimatePresence } = Motion;
+
+        // 아이콘 컴포넌트
+        const IconDownload = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>;
+        const IconRotateCcw = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>;
+        const IconMessageSquare = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>;
+        const IconMic = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>;
+        const IconCloudUpload = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M12 12v9" /><path d="m16 16-4-4-4 4" /></svg>;
+        const IconCheckCircle = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>;
+        const IconVolume2 = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></svg>;
+        const IconUserCircle = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="10" r="3" /><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" /></svg>;
+        const IconChevronDown = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>;
+        const IconCalendar = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
+
+        const PencilFairy = ({ className = "", speech = "", mini = false, side = false, isListening = false }) => (
+            <motion.div
+                className={`relative flex flex-col items-center ${className} ${side ? 'justify-start' : ''}`}
+                animate={{
+                    y: isListening ? [0, -8, 0] : [0, -4, 0],
+                    scale: isListening ? [1, 1.05, 1] : 1
+                }}
+                transition={{ repeat: Infinity, duration: isListening ? 0.6 : 2.5, ease: "easeInOut" }}
+            >
+                <svg width={mini ? "60" : "80"} height={mini ? "70" : "100"} viewBox="0 0 120 150" fill="none">
+                    <motion.path d="M45 55C25 45 15 75 30 85C15 95 20 115 40 105" stroke={isListening ? "#EF4444" : "#A0AEC0"} strokeWidth="4" strokeLinecap="round" animate={{ rotate: isListening ? [-8, 8, -8] : 0 }} />
+                    <motion.path d="M75 55C95 45 105 75 90 85C105 95 100 115 80 105" stroke={isListening ? "#EF4444" : "#A0AEC0"} strokeWidth="4" strokeLinecap="round" animate={{ rotate: isListening ? [8, -8, 8] : 0 }} />
+                    <path d="M45 30L75 30V110L60 135L45 110V30Z" fill={isListening ? "#F87171" : "#F6AD55"} stroke="#4A5568" strokeWidth="2" />
+                    <path d="M45 110L60 135L75 110H45Z" fill="#FBD38D" stroke="#4A5568" strokeWidth="2" />
+                    <path d="M54 125L60 135L66 125H54Z" fill="#2D3748" />
+                    <path d="M45 15C45 10 75 10 75 15V30H45V15Z" fill="#FBB6CE" stroke="#4A5568" strokeWidth="2" />
+                    <circle cx="53" cy="65" r="2.5" fill={isListening ? "#EF4444" : "#2D3748"} />
+                    <circle cx="67" cy="65" r="2.5" fill={isListening ? "#EF4444" : "#2D3748"} />
+                    <motion.path d="M56 78C56 78 60 82 64 78" stroke="#2D3748" strokeWidth="2" strokeLinecap="round" animate={{ scaleY: isListening ? [1, 1.8, 1] : 1 }} />
+                </svg>
+                {speech && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`mt-2 bg-white px-6 py-3 rounded-3xl shadow-xl border-2 ${isListening ? 'border-red-400 ring-4 ring-red-50' : 'border-orange-200'} relative z-10 whitespace-pre-wrap max-w-[280px]`}>
+                        <p className={`text-lg font-bold leading-tight text-center ${isListening ? 'text-red-500' : 'text-slate-800'}`}>{isListening ? "듣고 있어요! 천천히 말씀하세요." : speech}</p>
+                        <div className={`absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 ${isListening ? 'border-red-400' : 'border-orange-200'} rotate-45`}></div>
+                    </motion.div>
+                )}
+            </motion.div>
+        );
+
+        const App = () => {
+            const [step, setStep] = useState(0);
+            const [nickname, setNickname] = useState("");
+            const [selectedId, setSelectedId] = useState("");
+            const [studentList, setStudentList] = useState([]);
+            const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+            const [diaryParts, setDiaryParts] = useState({ when: "", where: "", who: "", what: "" });
+            const [subStep, setSubStep] = useState(0);
+            const [additionalStory, setAdditionalStory] = useState("");
+            const [selectedFeelings, setSelectedFeelings] = useState([]);
+            const [showInstruction, setShowInstruction] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [isCapturing, setIsCapturing] = useState(false);
+            const [isSaving, setIsSaving] = useState(false);
+            const [saveStatus, setSaveStatus] = useState(null);
+            const [isListening, setIsListening] = useState(false);
+            const [interimText, setInterimText] = useState("");
+            const [todayDate, setTodayDate] = useState("");
+            const [micStatus, setMicStatus] = useState("checking"); // checking | idle | success | error_denied | error_secure | error
+            const [feelingReason, setFeelingReason] = useState("");
+            const [activeTooltip, setActiveTooltip] = useState(null);
+
+            const recognitionRef = useRef(null);
+            const diaryCardRef = useRef(null);
+
+            // 설정 관리 (localStorage 활용)
+            const [gasUrl, setGasUrl] = useState(localStorage.getItem('ONE_SENTENCE_DIARY_GAS_URL') || "");
+            const [showSettingModal, setShowSettingModal] = useState(false);
+            const [urlInput, setUrlInput] = useState("");
+
+            // 로컬 테스트용 더미 명단
+            const DUMMY_STUDENTS = [
+                { id: 1, name: "강현우" }, { id: 2, name: "김민서" }, { id: 3, name: "박준영" }, { id: 4, name: "이서윤" }, { id: 5, name: "최도윤" }
+            ];
+
+            useEffect(() => {
+                if (step === 3) {
+                    setShowInstruction(true);
+                }
+            }, [step, subStep]);
+
+            // Step 1에서 마이크가 이미 허용된 경우 자동으로 다음 단계 진행
+            useEffect(() => {
+                if (step === 1 && micStatus === 'success') {
+                    const timer = setTimeout(() => handleNextStep(), 1200);
+                    return () => clearTimeout(timer);
+                }
+            }, [step, micStatus]);
+
+            useEffect(() => {
+                // 오늘 날짜 설정 (YYYY년 MM월 DD일)
+                const now = new Date();
+                const formatted = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
+                setTodayDate(formatted);
+
+                const fetchStudents = async () => {
+                    // 1. Google Apps Script 내부 실행 시
+                    if (typeof google !== 'undefined' && google.script && google.script.run) {
+                        google.script.run.withSuccessHandler(data => {
+                            if (data && Array.isArray(data)) setStudentList(data);
+                        }).getStudents();
+                    }
+                    // 2. 외부 호스팅인 경우 (저장된 gasUrl 사용)
+                    else if (gasUrl && gasUrl.startsWith("https://")) {
+                        try {
+                            const response = await fetch(`${gasUrl}?type=getStudents`);
+                            const data = await response.json();
+                            if (data && Array.isArray(data)) setStudentList(data);
+                        } catch (e) {
+                            console.warn("GAS 연결 실패", e);
+                            setStudentList(DUMMY_STUDENTS);
+                        }
+                    }
+                    else {
+                        setStudentList(DUMMY_STUDENTS);
+                    }
+                };
+                fetchStudents();
+            }, []);
+
+            // 마이크 권한 상태를 앱 시작 시 자동으로 확인
+            useEffect(() => {
+                let permissionResult = null;
+                const checkMicPermission = async () => {
+                    // 1. file:// 프로토콜 체크
+                    if (window.location.protocol === 'file:') {
+                        setMicStatus('error_file');
+                        return;
+                    }
+
+                    // 2. 보안 컨텍스트 체크 (Web Speech API 필수 조건)
+                    if (!window.isSecureContext) {
+                        setMicStatus('error_secure');
+                        return;
+                    }
+
+                    // 3. 권한 상태 쿼리
+                    if (navigator.permissions && navigator.permissions.query) {
+                        try {
+                            permissionResult = await navigator.permissions.query({ name: 'microphone' });
+
+                            const applyState = (state) => {
+                                if (state === 'granted') {
+                                    setMicStatus('success');
+                                } else {
+                                    setMicStatus('idle');
+                                }
+                            };
+
+                            applyState(permissionResult.state);
+
+                            permissionResult.onchange = () => {
+                                if (permissionResult.state === 'granted') setMicStatus('success');
+                                else setMicStatus('idle');
+                            };
+                        } catch (e) {
+                            // 권한 쿼리 자체가 차단된 경우 (iframe 정책 등)
+                            setMicStatus('idle');
+                        }
+                    } else {
+                        setMicStatus('idle');
+                    }
+                };
+                checkMicPermission();
+                return () => {
+                    if (permissionResult) permissionResult.onchange = null;
+                };
+            }, []);
+
+            useEffect(() => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRecognition && !recognitionRef.current) {
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = 'ko-KR';
+                    recognition.interimResults = true;
+                    recognition.continuous = true;
+
+                    recognition.onstart = () => {
+                        setIsListening(true);
+                        setInterimText("");
+                    };
+
+                    recognition.onresult = (event) => {
+                        let finalText = "";
+                        let currentInterim = "";
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalText += transcript;
+                            } else {
+                                currentInterim += transcript;
+                            }
+                        }
+
+                        if (finalText) {
+                            handleFinalSpeech(finalText);
+                        } else {
+                            setInterimText(currentInterim);
+                        }
+                    };
+
+                    recognition.onerror = (event) => {
+                        if (event.error === 'no-speech') {
+                            console.warn("음성이 감지되지 않았습니다.");
+                        } else {
+                            console.error("음성 인식 오류:", event.error);
+                        }
+                        setIsListening(false);
+                    };
+
+                    recognition.onend = () => {
+                        setIsListening(false);
+                    };
+
+                    recognitionRef.current = recognition;
+                }
+
+                return () => {
+                    if (recognitionRef.current) recognitionRef.current.stop();
+                };
+            }, []);
+
+
+            const isFileProtocol = window.location.protocol === 'file:';
+
+            const requestMicPermission = async () => {
+                if (window.location.protocol === 'file:') { setMicStatus("error_file"); return; }
+                if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    setMicStatus("error_secure");
+                    return;
+                }
+
+                setMicStatus("checking");
+
+                try {
+                    // 1. getUserMedia를 통해 마이크 권한 직접 요청 (가장 확실한 방법)
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // 권한 획득 성공 시 스트림은 바로 닫기 (음성 인식 API만 사용)
+                    stream.getTracks().forEach(track => track.stop());
+
+                    // 2. 음성 인식 객체 생성 및 테스트
+                    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!SR) { setMicStatus("error"); return; }
+
+                    const testRec = new SR();
+                    testRec.lang = 'ko-KR';
+
+                    let resolved = false;
+                    const done = (result) => {
+                        if (resolved) return;
+                        resolved = true;
+                        try { testRec.abort(); } catch (e) { }
+                        if (result === 'success') {
+                            setMicStatus("success");
+                            setTimeout(() => handleNextStep(), 800);
+                        } else {
+                            setMicStatus(result);
+                        }
+                    };
+
+                    testRec.onstart = () => done('success');
+                    testRec.onerror = (e) => {
+                        console.log('mic test error:', e.error);
+                        if (e.error === 'not-allowed') done('error_denied');
+                        else done('success'); // 접근 권한은 확보된 상태
+                    };
+                    testRec.onend = () => done('success');
+
+                    testRec.start();
+                    setTimeout(() => done('success'), 3000); // 3초 내 반응 없어도 일단 권한은 딴 것으로 간주
+
+                } catch (err) {
+                    console.error('마이크 요청 에러:', err);
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        setMicStatus("error_denied");
+                    } else if (err.name === 'SecurityError' || err.name === 'NotSupportedError') {
+                        // GAS 등 특수 환경에서 권한 정책 충돌 가능성
+                        if (window.location.protocol === 'https:') setMicStatus("error_policy");
+                        else setMicStatus("error_secure");
+                    } else {
+                        setMicStatus("error");
+                    }
+                }
+            };
+
+            const handleFinalSpeech = (text) => {
+                if (!text.trim()) return;
+                const trimmedText = text.trim();
+
+                // 음성 인식 결과가 들어올 때 각 단계별 처리
+                if (step === 2) {
+                    const found = studentList.find(s => trimmedText.includes(s.name));
+                    if (found) {
+                        setNickname(found.name);
+                        setSelectedId(found.id);
+                    }
+                } else if (step === 3) {
+                    // Step 3에서는 인식된 내용을 입력창에 넣고, 
+                    // 만약 예시 단어와 정확히 일치하거나 포함하면 자동으로 선택되게 할 수도 있음
+                    setInterimText(trimmedText);
+                    const matchedOption = diaryOptions[subStep].options.find(opt => trimmedText.includes(opt));
+                    if (matchedOption) {
+                        handleSubStepComplete(matchedOption);
+                        setInterimText("");
+                    }
+                } else if (step === 4) {
+                    setAdditionalStory(prev => prev ? prev + " " + trimmedText : trimmedText);
+                    setInterimText("");
+                } else if (step === 6) {
+                    setFeelingReason(prev => prev ? prev + " " + trimmedText : trimmedText);
+                    setInterimText("");
+                } else {
+                    setInterimText(trimmedText);
+                }
+            };
+
+            const toggleListening = () => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    alert("이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 브라우저를 사용해 주세요!");
+                    return;
+                }
+
+                if (!recognitionRef.current) {
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = 'ko-KR';
+                    recognition.interimResults = true;
+                    recognition.continuous = true;
+                    recognition.onstart = () => { setIsListening(true); setInterimText(""); };
+                    recognition.onresult = (event) => {
+                        let finalText = "";
+                        let currentInterim = "";
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) finalText += transcript;
+                            else currentInterim += transcript;
+                        }
+                        if (finalText) handleFinalSpeech(finalText);
+                        else setInterimText(currentInterim);
+                    };
+                    recognition.onerror = (event) => {
+                        if (event.error !== 'no-speech') console.error("음성 인식 오류:", event.error);
+                        setIsListening(false);
+                    };
+                    recognition.onend = () => setIsListening(false);
+                    recognitionRef.current = recognition;
+                }
+
+                if (isListening) {
+                    recognitionRef.current.stop();
+                } else {
+                    setInterimText("");
+                    try {
+                        recognitionRef.current.start();
+                    } catch (e) {
+                        try {
+                            recognitionRef.current.stop();
+                            setTimeout(() => recognitionRef.current.start(), 250);
+                        } catch (e2) { }
+                    }
+                }
+            };
+
+            const handleNextStep = (feelingOverride = null) => {
+                if (isListening) recognitionRef.current.stop();
+                const nextStep = step + 1;
+                setStep(nextStep);
+                setProgress(prev => Math.min(prev + (100 / 7), 100));
+
+                // Step 6 (Reason) -> Step 7 (Card) 자동 제출
+                if (nextStep === 7) {
+                    saveToGoogleSheets(feelingOverride);
+                }
+            };
+
+            const handlePrevStep = () => {
+                if (isListening) recognitionRef.current.stop();
+                if (step === 3 && subStep > 0) {
+                    setSubStep(prev => prev - 1);
+                    setProgress(prev => prev - 4);
+                } else {
+                    setStep(prev => Math.max(0, prev - 1));
+                    setProgress(prev => Math.max(0, prev - (100 / 7)));
+                }
+            };
+
+            const handleSubStepComplete = (value) => {
+                if (!value) return;
+                const key = diaryOptions[subStep].key;
+                setDiaryParts(prev => ({ ...prev, [key]: value }));
+                if (subStep < 3) {
+                    setSubStep(subStep + 1);
+                    setProgress(prev => prev + 4);
+                } else {
+                    handleNextStep();
+                }
+            };
+
+            const saveToGoogleSheets = async (feelingOverride = null) => {
+                setIsSaving(true);
+                setSaveStatus(null);
+
+                const combinedFeelings = selectedFeelings.map(f => f.label).join(", ");
+                const combinedFeelingSentences = selectedFeelings.map(f => f.sentence).join(" ");
+                const combinedDiary = `${diaryParts.when} ${diaryParts.where} ${diaryParts.who} ${diaryParts.what}. ${additionalStory} ${combinedFeelingSentences} ${feelingReason}`.trim();
+                const payload = { id: selectedId, nickname, diaryText: combinedDiary, feeling: combinedFeelings };
+
+                // 1. Google Apps Script 내부 실행 시
+                if (typeof google !== 'undefined' && google.script && google.script.run) {
+                    google.script.run
+                        .withSuccessHandler(() => { setSaveStatus('success'); setTimeout(() => setSaveStatus(null), 3000); setIsSaving(false); })
+                        .withFailureHandler(() => { setSaveStatus('error'); setIsSaving(false); })
+                        .saveDiary(payload);
+                }
+                // 2. 외부 호스팅인 경우 (gasUrl 사용)
+                else if (gasUrl && gasUrl.startsWith("https://")) {
+                    try {
+                        await fetch(gasUrl, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        setSaveStatus('success');
+                        setTimeout(() => setSaveStatus(null), 3000);
+                    } catch (e) { setSaveStatus('error'); }
+                    finally { setIsSaving(false); }
+                }
+                else {
+                    console.log("로컬 저장 시뮬레이션:", payload);
+                    setTimeout(() => { setSaveStatus('success'); setIsSaving(false); }, 1000);
+                }
+            };
+
+            const updateGasUrl = () => {
+                const trimmed = urlInput.trim();
+                if (trimmed.startsWith("https://script.google.com")) {
+                    localStorage.setItem('ONE_SENTENCE_DIARY_GAS_URL', trimmed);
+                    setGasUrl(trimmed);
+                    setShowSettingModal(false);
+                    window.location.reload();
+                } else {
+                    alert("올바른 앱스크립트 웹 앱 URL을 입력해 주세요!");
+                }
+            };
+
+            const saveDiaryAsImage = async () => {
+                if (window.html2canvas && diaryCardRef.current) {
+                    setIsCapturing(true);
+                    const canvas = await window.html2canvas(diaryCardRef.current, { scale: 2 });
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL("image/png");
+                    link.download = `${nickname}_일기_${todayDate.replace(/ /g, '')}.png`;
+                    link.click();
+                    setIsCapturing(false);
+                }
+            };
+
+            const resetAll = () => {
+                setStep(0); setSubStep(0); setNickname(""); setSelectedId("");
+                setDiaryParts({ when: "", where: "", who: "", what: "" });
+                setAdditionalStory(""); setFeelingReason(""); setSelectedFeelings([]); setProgress(0);
+                // 리셋 시: granted면 success, 나머지는 모두 idle (denied여도 버튼 클릭 가능하게)
+                if (window.location.protocol === 'file:') {
+                    setMicStatus('error_file');
+                } else if (navigator.permissions && navigator.permissions.query) {
+                    navigator.permissions.query({ name: 'microphone' }).then(r => {
+                        setMicStatus(r.state === 'granted' ? 'success' : 'idle');
+                    }).catch(() => setMicStatus('idle'));
+                } else {
+                    setMicStatus('idle');
+                }
+            };
+
+            const diaryOptions = [
+                { key: 'when', label: '언제?', fairy: '언제 있었던 일이야?', instruction: '언제 있었던 일인지 말해볼까요?\n예시 중에서 골라보거나, 없을 경우 스스로 완성해 보세요!', options: ["오늘 아침에", "점심 시간에", "학교 끝나고", "어제 밤에", "꿈 속에서", "주말 아침에", "해가 쨍쨍할 때", "비가 내릴 때", "눈이 오던 날", "깜깜한 밤에"] },
+                { key: 'where', label: '어디서?', fairy: '어디에서 일어났니?', instruction: '어디에서 있었던 일인지 말해볼까요?\n예시 중에서 골라보거나, 없을 경우 스스로 완성해 보세요!', options: ["교실에서", "운동장에서", "집 거실에서", "놀이터에서", "학원 가는 길", "도서관에서", "마트에서", "공원에서", "내 방에서"] },
+                { key: 'who', label: '누구와?', fairy: '누구랑 같이 있었어?', instruction: '누구와 함께 있었는지 말해볼까요?\n예시 중에서 골라보거나, 없을 경우 스스로 완성해 보세요!', options: ["친구랑", "선생님이랑", "가족이랑", "나 혼자서", "동생이랑", "강아지랑", "짝꿍이랑", "인형이랑", "엄마 아빠랑"] },
+                { key: 'what', label: '무엇을?', fairy: '어떤 일을 했니?', instruction: '어떤 일을 했는지 말해볼까요?\n예시 중에서 골라보거나, 없을 경우 스스로 완성해 보세요!', options: ["신나게 놀았다", "공부를 했다", "맛있게 먹었다", "꿈을 꿨다", "깔깔 웃었다", "멋지게 해냈다", "그림을 그렸다", "심부름을 했다"] }
+            ];
+
+            const feelingList = [
+                {
+                    category: "🌟 긍정",
+                    desc: "기분 좋은 에너지가 생길 때",
+                    items: [
+                        { label: "뿌듯하다", icon: "⭐", sentence: "무언가 해낸 것 같아 뿌듯했어!", def: "힘들게 노력해서 무언가를 해냈을 때", eg: "받아쓰기 백 점을 받았다." },
+                        { label: "설레다", icon: "💓", sentence: "마음이 두근두근 설레었어!", def: "좋은 일이 생길 것 같아 마음이 두근거릴 때", eg: "내일은 생일 파티를 하는 날이다." },
+                        { label: "개운하다", icon: "🍃", sentence: "할 일을 다 끝내서 개운해!", def: "고민이나 할 일을 다 끝내서 마음이 가벼울 때", eg: "밀린 일기를 다 써서 개운하다." },
+                        { label: "든든하다", icon: "🛡️", sentence: "누군가 내 편이 되어주어 든든했어!", def: "누군가 내 편이 되어주어 안심이 될 때", eg: "아빠가 내 손을 꼭 잡아주어 든든했다." },
+                        { label: "자랑스럽다", icon: "🏆", sentence: "정말 자랑스러운 하루였어!", def: "내가 혹은 내 주변 사람이 멋진 일을 했을 때", eg: "우리 반이 이어달리기에서 1등을 해서 자랑스럽다." }
+                    ]
+                },
+                {
+                    category: "😶 중립",
+                    desc: "생각이 많아지는 미묘한 마음",
+                    items: [
+                        { label: "궁금하다", icon: "🔍", sentence: "그것이 무엇인지 참 궁금했어!", def: "모르는 것을 알고 싶어 호기심이 생길 때", eg: "화단에 핀 꽃 이름이 무엇인지 궁금하다." },
+                        { label: "쑥스럽다", icon: "😊", sentence: "기분이 좋으면서도 쑥스러웠어!", def: "부끄러우면서도 기분이 나쁘지 않을 때", eg: "친구들이 생일 축하 노래를 불러줘서 쑥스러웠다." },
+                        { label: "어리둥절하다", icon: "🌀", sentence: "무슨 일인지 어리둥절한 기분이었어!", def: "갑작스러운 상황에 상황 파악이 안 될 때", eg: "자고 일어났는데 아무도 없어서 어리둥절했다." },
+                        { label: "부럽다", icon: "✨", sentence: "남의 재능이 정말 부러웠어!", def: "남이 가진 것이나 재능을 나도 갖고 싶을 때", eg: "친구의 새 필통이 정말 부러웠다." },
+                        { label: "덤덤하다", icon: "😐", sentence: "마음이 흔들리지 않고 덤덤했어!", def: "큰 사건이 있었지만 마음이 흔들리지 않고 평온할 때", eg: "주사를 맞았는데 생각보다 아프지 않아 덤덤했다." }
+                    ]
+                },
+                {
+                    category: "☔️ 부정",
+                    desc: "마음이 조금 속상하거나 불편할 때",
+                    items: [
+                        { label: "억울하다", icon: "💢", sentence: "내 잘못이 아닌데 억울한 기분이었어!", def: "내 잘못이 아닌데 비난을 받아 답답할 때", eg: "내가 안 깼는데 내가 깼다고 해서 억울했다." },
+                        { label: "조마조마하다", icon: "😨", sentence: "나쁜 일이 생길까 봐 조마조마했어!", def: "좋지 않은 일이 생길까 봐 걱정될 때", eg: "지각할까 봐 등굣길에 마음이 조마조마했다." },
+                        { label: "얄밉다", icon: "😤", sentence: "그 행동이 정말 얄밉게 느껴졌어!", def: "상대방의 행동이 거슬리고 화가 날 때", eg: "나를 따라 하며 메롱을 하는 짝꿍이 얄미웠다." },
+                        { label: "서운하다", icon: "😢", sentence: "기대한 대로 되지 않아 서운했어!", def: "기대했던 일이 이루어지지 않아 마음이 쓸쓸할 때", eg: "엄마가 약속한 간식을 안 사 오셔서 서운했다." },
+                        { label: "창피하다", icon: "🙈", sentence: "남들이 볼까 봐 정말 창피했어!", def: "실수나 잘못을 해서 남들이 볼까 봐 숨고 싶을 때", eg: "복도에서 넘어졌는데 친구들이 봐서 창피했다." }
+                    ]
+                }
+            ];
+
+            return (
+                <div className="h-screen w-screen bg-[#F0F7FF] flex flex-col font-sans select-none overflow-hidden text-slate-800">
+                    {/* 상단 프로그레스 바 */}
+                    <div className="w-full px-12 pt-8 shrink-0">
+                        <div className="h-3 bg-white rounded-full border border-slate-200 shadow-inner overflow-hidden flex items-center px-1">
+                            <motion.div animate={{ width: `${progress}%` }} className="h-2 bg-gradient-to-r from-orange-300 to-orange-500 rounded-full transition-all duration-500" />
+                        </div>
+                    </div>
+
+                    <main className="flex-1 w-full flex flex-col items-center justify-center p-8 overflow-hidden relative">
+                        <AnimatePresence mode="wait">
+                            {step === 0 && (
+                                <motion.div key="s0" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center space-y-8 w-full h-full overflow-hidden">
+                                    <div className="flex flex-col items-center space-y-6 w-full max-w-4xl px-4">
+                                        <PencilFairy />
+                                        <div className="flex flex-col items-center gap-4">
+                                            <div className="bg-white px-8 py-1 rounded-full border-2 border-orange-100 shadow-sm">
+                                                <span className="text-orange-600 font-black text-lg">국어 1-2학년군</span>
+                                            </div>
+                                            <h1 className="text-7xl font-black text-[#2D336B] tracking-tighter py-2 text-center break-keep">한 문장 일기쓰기</h1>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative w-full max-w-2xl">
+                                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-3 rounded-full flex items-center gap-2 shadow-lg z-10">
+                                            <IconVolume2 />
+                                            <span className="text-white font-black text-xl whitespace-nowrap">오늘의 공부 약속</span>
+                                        </div>
+                                        <div className="bg-white p-10 rounded-[3.5rem] shadow-xl border-4 border-orange-50/50 flex flex-col items-center text-center">
+                                            <p className="text-4xl font-black text-slate-700 mt-2 leading-tight">
+                                                "오늘 하루의 소중한 순간을<br />멋지게 기록해볼까요?"
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col items-center w-full max-w-md pb-2 gap-4">
+                                        <button
+                                            onClick={handleNextStep}
+                                            className="w-full py-5 bg-gradient-to-b from-orange-400 to-orange-600 text-white rounded-[2.5rem] text-4xl font-black shadow-[0_10px_0_rgb(154,52,18)] hover:shadow-[0_8px_0_rgb(154,52,18)] hover:scale-[1.02] active:shadow-none active:translate-y-2 flex items-center justify-center gap-4 transition-all"
+                                        >
+                                            활동 시작!
+                                            <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                        </button>
+
+                                        {/* 설정 버튼 */}
+                                        <button
+                                            onClick={() => { setUrlInput(gasUrl); setShowSettingModal(true); }}
+                                            className="text-slate-400 hover:text-slate-600 font-bold flex items-center gap-2 transition-colors"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
+                                            {gasUrl ? "연결 주소 수정" : "서버 주소 설정하기"}
+                                        </button>
+                                    </div>
+
+                                    {/* 연결 주소 설정 모달 */}
+                                    <AnimatePresence>
+                                        {showSettingModal && (
+                                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6">
+                                                <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 border-4 border-blue-100">
+                                                    <h2 className="text-3xl font-black text-slate-800 mb-4 flex items-center gap-3">🔗 서버 연동 설정</h2>
+                                                    <p className="text-lg text-slate-600 font-bold mb-6 leading-relaxed">
+                                                        앱스크립트에서 배포한 <span className="text-blue-600">'웹 앱 URL'</span>을 입력해 주세요.<br />
+                                                        (최초 1회만 설정하면 브라우저가 기억합니다!)
+                                                    </p>
+                                                    <input
+                                                        type="text"
+                                                        value={urlInput}
+                                                        onChange={(e) => setUrlInput(e.target.value)}
+                                                        placeholder="https://script.google.com/macros/s/..."
+                                                        className="w-full p-5 bg-slate-50 border-2 border-slate-200 rounded-[1.5rem] text-lg font-bold outline-none focus:border-blue-500 transition-all mb-6"
+                                                    />
+                                                    <div className="flex gap-3">
+                                                        <button onClick={() => setShowSettingModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-[1.2rem] font-black text-xl hover:bg-slate-200 transition-all">닫기</button>
+                                                        <button onClick={updateGasUrl} className="flex-[2] py-4 bg-blue-600 text-white rounded-[1.2rem] font-black text-xl shadow-lg hover:bg-blue-700 transition-all">저장하고 연결하기</button>
+                                                    </div>
+                                                </motion.div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            )}
+
+                            {step === 1 && (
+                                <motion.div key="s1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center space-y-6 max-w-2xl w-full h-full flex flex-col justify-center px-4">
+                                    <div className="bg-white p-10 rounded-[3rem] shadow-xl border-2 border-orange-100 relative">
+                                        <div className="mb-6"><PencilFairy speech={micStatus === "success" ? "좋아! 마이크가 준비됐어." : micStatus === "checking" ? "마이크 상태를 확인하고 있어..." : micStatus.startsWith("error") ? "앗, 마이크를 사용할 수 없대." : "마이크를 사용할 수 있게 도와줘!"} /></div>
+                                        <div className="mt-4 space-y-4">
+                                            <p className="text-4xl font-black text-slate-700">일기를 말하기 위해서는<br />마이크 권한이 필요해!</p>
+                                            <div className="flex justify-center gap-6 py-2">
+                                                <div className={`w-24 h-24 rounded-[2rem] flex items-center justify-center shadow-lg transition-all ${micStatus === 'success' ? 'bg-green-100 text-green-600' :
+                                                    micStatus === 'checking' ? 'bg-slate-100 text-slate-400 animate-pulse' :
+                                                        micStatus.startsWith('error') ? 'bg-red-100 text-red-600' :
+                                                            'bg-orange-100 text-orange-500'
+                                                    }`}>
+                                                    <div className="scale-[1.8]">{micStatus === 'success' ? <IconCheckCircle /> : <IconMic />}</div>
+                                                </div>
+                                            </div>
+                                            {micStatus === 'checking' && (
+                                                <p className="text-xl font-bold text-slate-400 animate-pulse">마이크 권한 상태를 확인하는 중이에요...</p>
+                                            )}
+                                            {micStatus.startsWith("error") && (
+                                                <div className={`p-6 rounded-[2rem] border-2 font-black text-xl leading-relaxed ${micStatus === 'error_file' || micStatus === 'error_secure' || micStatus === 'error_policy' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-red-50 border-red-100 text-red-600'
+                                                    }`}>
+                                                    {micStatus === 'error_file' ? (
+                                                        <div className="space-y-3 text-center">
+                                                            <p className="text-2xl">📁 로컬 파일로 열려 있어요!</p>
+                                                            <p className="text-lg font-bold text-amber-800">마이크는 구글 앱스 스크립트 주소나 보안 서버 주소로 접속해야만 사용 가능합니다.</p>
+                                                            <div className="bg-white/60 rounded-[1.5rem] p-4 text-base text-slate-600 font-bold space-y-1">
+                                                                <p>✅ Chrome 브라우저에서 <span className="text-amber-600">HTTPS 주소</span>로 접속해 주세요!</p>
+                                                            </div>
+                                                        </div>
+                                                    ) : micStatus === 'error_secure' ? (
+                                                        <div className="space-y-3 text-center">
+                                                            <p className="text-2xl">🔒 보안 연결이 아니에요! (HTTP)</p>
+                                                            <p className="text-lg font-bold text-amber-800">마이크는 보안 주소(https)에서만 작동합니다.</p>
+                                                            <div className="bg-white/60 rounded-[1.5rem] p-4 text-base text-slate-600 font-bold space-y-1">
+                                                                <p>주소창 앞에 <span className="text-amber-600">s</span>를 붙여 <span className="text-amber-600">https://</span>로 접속해 보세요.</p>
+                                                                <p className="text-sm mt-2 opacity-70">(안티그래비티 호스팅은 HTTPS를 기본 지원합니다)</p>
+                                                            </div>
+                                                        </div>
+                                                    ) : micStatus === 'error_policy' ? (
+                                                        <div className="space-y-3 text-center">
+                                                            <p className="text-2xl">🚧 iframe 권한 정책 설정이 필요해요!</p>
+                                                            <p className="text-lg font-bold text-slate-600">앱이 실행되는 상위 페이지에서 마이크를 허용해주어야 합니다.</p>
+                                                            <div className="bg-white/60 rounded-[1.5rem] p-4 text-left text-sm text-slate-600 font-mono space-y-2">
+                                                                <p>상위 페이지의 <span className="text-orange-600">&lt;iframe&gt;</span> 태그에 아래 속성을 추가해 주세요:</p>
+                                                                <div className="bg-slate-800 text-orange-200 p-2 rounded-lg break-all">
+                                                                    allow="microphone"
+                                                                </div>
+                                                                <p className="text-xs font-sans text-slate-500 italic mt-1 font-bold">※ 안티그래비티 미리보기라면 '새 탭에서 열기'를 눌러보세요!</p>
+                                                            </div>
+                                                        </div>
+                                                    ) : micStatus === 'error_denied' ? (
+                                                        <div className="space-y-3">
+                                                            <p className="text-center">🚫 마이크 권한이 거부되어 있어요.</p>
+                                                            <div className="text-left text-lg text-slate-600 font-bold space-y-2 px-2">
+                                                                <p>1. 주소창 왼쪽 <span className="text-red-500">🔒 자물쇠</span> 아이콘 클릭</p>
+                                                                <p>2. '마이크'를 <span className="text-red-500">허용</span>으로 변경</p>
+                                                                <p>3. 페이지 새로고침 후 다시 시도</p>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-2 text-center">
+                                                            <p>마이크 연결에 문제가 생겼어요.</p>
+                                                            <p className="text-lg text-slate-500 font-bold">마이크가 연결되어 있는지, 혹은 다른 앱이 사용 중인지 확인해 주세요.</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <button
+                                            onClick={requestMicPermission}
+                                            disabled={micStatus === "success" || micStatus === "checking"}
+                                            className={`w-full py-6 rounded-[2.5rem] text-4xl font-black shadow-xl transition-all active:scale-95 flex items-center justify-center gap-4 ${micStatus === 'success' ? 'bg-green-500 text-white' :
+                                                micStatus === 'checking' ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' :
+                                                    'bg-blue-500 text-white hover:bg-blue-600 shadow-blue-200'
+                                                }`}
+                                        >
+                                            {micStatus === 'success' ? '✅ 준비 완료!' : micStatus === 'checking' ? '⏳ 확인 중...' : '🎙️ 마이크 허용하기'}
+                                        </button>
+
+                                        {/* 테스트를 위한 건너뛰기 버튼 추가 */}
+                                        <button
+                                            onClick={handleNextStep}
+                                            className="w-full py-4 bg-white/50 text-slate-400 font-bold text-xl rounded-[1.5rem] border-2 border-dashed border-slate-200 hover:bg-white hover:text-slate-600 transition-all mt-4"
+                                        >
+                                            (테스트용) 마이크 없이 명단 확인하기
+                                        </button>
+
+                                        {micStatus.startsWith("error") && (
+                                            <button
+                                                onClick={handleNextStep}
+                                                className="w-full py-4 text-slate-400 font-black text-2xl hover:text-slate-600 transition-colors"
+                                            >
+                                                마이크 없이 계속하기 (직접 타이핑)
+                                            </button>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {step === 2 && (
+                                <motion.div key="s2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full max-w-4xl space-y-8 text-center h-full flex flex-col justify-center px-10">
+                                    <div className="flex items-center gap-8 mb-4">
+                                        <PencilFairy isListening={isListening} speech="너의 이름은 무엇이니?" className="shrink-0" />
+                                        <div className="flex-1 text-left">
+                                            <p className="text-3xl font-black text-slate-400 mb-2">반가워! 내 이름은 연필요정이야.</p>
+                                            <p className="text-5xl font-black text-slate-800">너의 이름은 무엇이니?</p>
+                                        </div>
+                                    </div>
+                                    <div className="relative w-full max-w-2xl mx-auto">
+                                        <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-full p-8 flex items-center justify-between text-4xl font-black bg-white border-4 border-orange-100 rounded-[2.5rem] shadow-xl transition-all hover:bg-orange-50/30">
+                                            <span className="flex items-center gap-6 text-slate-700 truncate min-w-0"><IconUserCircle /> {selectedId ? `${selectedId}번 ${nickname}` : "이름 선택하기"}</span>
+                                            <IconChevronDown />
+                                        </button>
+                                        {isDropdownOpen && (
+                                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="absolute z-50 left-0 right-0 mt-4 bg-white border-4 border-orange-100 rounded-[2.5rem] shadow-2xl max-h-[40vh] overflow-y-auto custom-scrollbar p-4">
+                                                {studentList.length > 0 ? studentList.map(s => (
+                                                    <button key={s.id} onClick={() => { setNickname(s.name); setSelectedId(s.id); setIsDropdownOpen(false); }} className={`w-full p-6 text-3xl font-black rounded-[1.5rem] mb-2 transition-all ${nickname === s.name ? 'bg-orange-500 text-white shadow-lg' : 'hover:bg-orange-50 text-slate-600'}`}>
+                                                        {s.id}번 {s.name}
+                                                    </button>
+                                                )) : <div className="p-6 text-slate-400 italic text-2xl">명단을 불러오는 중...</div>}
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                    <button disabled={!nickname} onClick={handleNextStep} className="w-full py-6 bg-blue-600 text-white rounded-[2.5rem] text-4xl font-black shadow-xl disabled:opacity-50 disabled:grayscale transition-all hover:bg-blue-700 shadow-blue-200">준비 완료!</button>
+                                </motion.div>
+                            )}
+
+                            {step === 3 && (
+                                <motion.div key={`s3-${subStep}`} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="w-full h-full flex flex-col space-y-4 overflow-hidden">
+                                    <div className="bg-orange-50 py-4 px-12 rounded-[2.5rem] shadow-xl border-2 border-orange-100 flex flex-col items-center justify-center gap-2 shrink-0 transition-all">
+                                        <div className="grid grid-cols-4 w-full gap-4 border-b border-orange-200/50 pb-2">
+                                            <div className="text-center text-xl font-black text-orange-600">언제</div>
+                                            <div className="text-center text-xl font-black text-orange-600">어디에서</div>
+                                            <div className="text-center text-xl font-black text-orange-600">누구와</div>
+                                            <div className="text-center text-xl font-black text-orange-600">무엇을</div>
+                                        </div>
+                                        <div className="grid grid-cols-4 w-full gap-4">
+                                            <div className="text-center text-3xl font-black transition-all flex items-center justify-center break-keep min-h-[1.2em]">
+                                                {diaryParts.when ? <motion.span initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-black">{diaryParts.when}</motion.span> : <span className="text-orange-200">...</span>}
+                                            </div>
+                                            <div className="text-center text-3xl font-black transition-all flex items-center justify-center break-keep min-h-[1.2em]">
+                                                {diaryParts.where ? <motion.span initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-black">{diaryParts.where}</motion.span> : <span className="text-orange-200">...</span>}
+                                            </div>
+                                            <div className="text-center text-3xl font-black transition-all flex items-center justify-center break-keep min-h-[1.2em]">
+                                                {diaryParts.who ? <motion.span initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-black">{diaryParts.who}</motion.span> : <span className="text-orange-200">...</span>}
+                                            </div>
+                                            <div className="text-center text-3xl font-black transition-all flex items-center justify-center break-keep min-h-[1.2em]">
+                                                {diaryParts.what ? <motion.span initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-black">{diaryParts.what}</motion.span> : <span className="text-orange-200">...</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
+                                        <div className="w-[18%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-6 border-2 border-orange-50 shadow-lg shrink-0">
+                                            <div className="bg-orange-100 px-6 py-1 rounded-full mb-4 shrink-0 shadow-sm border border-orange-200">
+                                                <h3 className="text-xl font-black text-orange-600">{diaryOptions[subStep].label}</h3>
+                                            </div>
+                                            <div className="scale-90 mb-4 shrink-0"><PencilFairy side isListening={isListening} speech={diaryOptions[subStep].fairy} /></div>
+                                            <button onClick={handlePrevStep} className="mt-auto flex items-center justify-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl hover:bg-orange-100 transition-all shrink-0 active:scale-95">
+                                                <IconRotateCcw /> 이전 단계로
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 flex flex-col bg-white p-6 rounded-[3rem] border-2 border-slate-50 shadow-xl overflow-hidden">
+                                            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar grid grid-cols-3 gap-3 auto-rows-max">
+                                                {diaryOptions[subStep].options.map(opt => (
+                                                    <button key={opt} onClick={() => handleSubStepComplete(opt)} className="p-6 bg-slate-50 border-4 border-transparent rounded-[1.5rem] text-3xl font-black text-slate-700 hover:border-orange-400 hover:bg-orange-50 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center min-h-[6rem] break-keep">{opt}</button>
+                                                ))}
+                                            </div>
+                                            <div className="mt-4 pt-4 border-t border-slate-100 flex gap-4 shrink-0">
+                                                <div className="relative flex-1">
+                                                    <input
+                                                        type="text"
+                                                        value={interimText}
+                                                        onChange={(e) => setInterimText(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && e.target.value) {
+                                                                handleSubStepComplete(e.target.value);
+                                                                setInterimText("");
+                                                            }
+                                                        }}
+                                                        placeholder="말하거나 직접 적어보세요!"
+                                                        className={`w-full p-5 pr-48 bg-slate-50 border-2 ${isListening ? 'border-red-400 ring-4 ring-red-50' : 'focus:border-orange-200 focus:bg-white border-slate-100'} rounded-[2rem] text-2xl font-black outline-none transition-all`}
+                                                    />
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
+                                                        {interimText && (
+                                                            <button
+                                                                onClick={() => { handleSubStepComplete(interimText); setInterimText(""); }}
+                                                                className="px-4 py-3 bg-blue-500 text-white rounded-[1.2rem] hover:bg-blue-600 shadow-lg transition-all active:scale-95 flex items-center gap-2 font-black"
+                                                            >
+                                                                <IconCheckCircle /> 입력하기
+                                                            </button>
+                                                        )}
+                                                        <button onClick={toggleListening} className={`p-3 rounded-[1.2rem] transition-all shadow-xl ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-500 text-white hover:bg-orange-600'}`}>
+                                                            <div className="scale-[1.2]">{isListening ? <IconVolume2 /> : <IconMic />}</div>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {step === 4 && (
+                                <motion.div key="s4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full h-full flex flex-col items-center justify-center space-y-8 overflow-hidden py-4 px-6">
+                                    <div className="flex flex-col items-center space-y-4 w-full max-w-3xl">
+                                        <PencilFairy isListening={isListening} speech="더 하고 싶은 이야기가 있니?" className="mb-2" />
+                                        <div className="w-full bg-white p-10 rounded-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-orange-50 relative flex flex-col overflow-hidden">
+                                            <div className="flex items-center gap-4 justify-center text-orange-600 font-black text-3xl mb-6">
+                                                <IconMessageSquare />
+                                                <span>이야기 더하기 (선택)</span>
+                                            </div>
+                                            <div className="h-64 relative">
+                                                <textarea
+                                                    value={additionalStory}
+                                                    onChange={(e) => setAdditionalStory(e.target.value)}
+                                                    placeholder="말하거나 직접 적어봐요! (없으면 다음 단계로!)"
+                                                    className={`w-full h-full p-8 bg-slate-50 border-2 ${isListening ? 'border-red-200 ring-4 ring-red-50' : 'focus:border-orange-200 focus:bg-white border-orange-50'} rounded-[2.5rem] text-3xl font-black outline-none resize-none transition-all text-center placeholder:text-slate-300`}
+                                                />
+                                                {interimText && isListening && (
+                                                    <div className="absolute inset-0 bg-white/90 backdrop-blur-sm p-6 rounded-[2.5rem] border-2 border-red-400 flex flex-col items-center justify-center gap-4 z-10 text-center">
+                                                        <div className="text-red-600 text-3xl font-black animate-pulse">"{interimText}"</div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setAdditionalStory(prev => prev ? prev + " " + interimText : interimText);
+                                                                setInterimText("");
+                                                            }}
+                                                            className="px-8 py-4 bg-blue-500 text-white rounded-2xl font-black text-2xl shadow-lg hover:bg-blue-600 active:scale-95 transition-all"
+                                                        >
+                                                            지금 바로 입력하기
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                <button onClick={toggleListening} className={`absolute right-4 bottom-4 p-6 rounded-2xl shadow-xl transition-all hover:scale-110 active:scale-95 z-20 ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-500 text-white shadow-orange-200'}`}>
+                                                    <div className="scale-[1.8]">{isListening ? <IconVolume2 /> : <IconMic />}</div>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-6 w-full max-w-2xl mx-auto shrink-0">
+                                        <button onClick={handlePrevStep} className="px-12 py-6 bg-orange-50 text-orange-600 border-4 border-orange-100 rounded-[2.5rem] text-3xl font-black hover:bg-orange-100 transition-all shadow-md active:scale-95 active:shadow-none">이전으로</button>
+                                        <button onClick={handleNextStep} className="flex-1 py-6 bg-orange-500 text-white rounded-[2.5rem] text-4xl font-black shadow-[0_10px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none transition-all">다음 단계로</button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {step === 5 && (
+                                <motion.div key="s5" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="w-full h-full flex gap-6 overflow-hidden py-2">
+                                    {/* 왼쪽 요정 영역 (사이드바 스타일) */}
+                                    <div className="w-[18%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-6 border-2 border-orange-50 shadow-lg shrink-0">
+                                        <div className="bg-orange-100 px-6 py-1 rounded-full mb-4 shrink-0 shadow-sm border border-orange-200">
+                                            <h3 className="text-xl font-black text-orange-600">마음은?</h3>
+                                        </div>
+                                        <div className="scale-90 mb-4 shrink-0"><PencilFairy side isListening={isListening} speech={`오늘 네 마음은 어떠니?\n여러 개 골라도 괜찮아!`} /></div>
+                                        <button onClick={handlePrevStep} className="mt-auto flex items-center justify-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl hover:bg-orange-100 transition-all shrink-0 active:scale-95">
+                                            <IconRotateCcw /> 이전 단계로
+                                        </button>
+                                    </div>
+
+                                    {/* 오른쪽 감정 선택 영역 */}
+                                    <div className="flex-1 flex flex-col bg-white p-6 rounded-[3rem] border-2 border-orange-50 shadow-xl overflow-hidden">
+                                        <div className="flex-1 grid grid-cols-5 gap-3 p-1">
+                                            {feelingList.flatMap((cat, catIdx) =>
+                                                cat.items.map((f) => {
+                                                    const isSelected = selectedFeelings.some(sf => sf.label === f.label);
+                                                    return (
+                                                        <motion.div
+                                                            key={f.label}
+                                                            whileHover={{ scale: 1.02 }}
+                                                            whileTap={{ scale: 0.98 }}
+                                                            onClick={() => {
+                                                                if (isSelected) {
+                                                                    setSelectedFeelings(selectedFeelings.filter(sf => sf.label !== f.label));
+                                                                } else {
+                                                                    setSelectedFeelings([...selectedFeelings, f]);
+                                                                }
+                                                            }}
+                                                            className={`relative flex flex-col items-center justify-center p-3 rounded-[2rem] border-2 cursor-pointer transition-all h-full
+                                                                ${isSelected ? 'border-orange-500 bg-orange-50 shadow-inner' : 'border-transparent bg-slate-50 hover:bg-white hover:border-orange-200'}`}
+                                                        >
+                                                            <div className="text-4xl mb-1">{f.icon}</div>
+                                                            <div className={`text-xl font-black break-keep text-center leading-tight ${isSelected ? 'text-orange-600' : 'text-slate-600'}`}>{f.label}</div>
+                                                            <button
+                                                                className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-yellow-400 text-white flex items-center justify-center text-2xl font-black hover:bg-yellow-500 z-20 shadow-lg border-4 border-white transition-transform hover:scale-110 active:scale-95"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    // feelingList에서 현재 항목 찾기
+                                                                    const feeling = feelingList.find(c => c.items.some(i => i.label === f.label)).items.find(i => i.label === f.label);
+                                                                    setActiveTooltip(feeling);
+                                                                }}
+                                                            >
+                                                                ?
+                                                            </button>
+                                                        </motion.div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                        <div className="mt-4 pt-4 border-t border-orange-50 shrink-0">
+                                            <button
+                                                onClick={handleNextStep}
+                                                disabled={selectedFeelings.length === 0}
+                                                className={`w-full py-4 rounded-[2rem] text-3xl font-black shadow-[0_6px_0_rgb(154,52,18)] active:translate-y-1 active:shadow-none transition-all ${selectedFeelings.length > 0 ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none active:translate-y-0'}`}
+                                            >
+                                                감정 선택 완료! {selectedFeelings.length > 0 && `(${selectedFeelings.length}개)`}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* 감정 설명 팝업 (모달) */}
+                                    <AnimatePresence>
+                                        {activeTooltip && typeof activeTooltip === 'object' && (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
+                                                onClick={() => setActiveTooltip(null)}
+                                            >
+                                                <motion.div
+                                                    initial={{ scale: 0.9, y: 20 }}
+                                                    animate={{ scale: 1, y: 0 }}
+                                                    exit={{ scale: 0.9, y: 20 }}
+                                                    className="bg-white w-full max-w-5xl rounded-[4rem] shadow-2xl p-12 border-4 border-yellow-200 relative overflow-hidden"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <div className="flex items-center gap-12">
+                                                        {/* 왼쪽: 아이콘 및 큰 제목 */}
+                                                        <div className="flex flex-col items-center space-y-6 shrink-0 border-r-4 border-slate-50 pr-12">
+                                                            <div className="text-[10rem] leading-none mb-2 drop-shadow-sm">{activeTooltip.icon}</div>
+                                                            <div className="text-center space-y-3">
+                                                                <h3 className="text-6xl font-black text-slate-800 tracking-tight">"{activeTooltip.label}"</h3>
+                                                                <div className="h-2 w-24 bg-yellow-400 rounded-full mx-auto" />
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 오른쪽: 설명 및 예시 */}
+                                                        <div className="flex-1 flex flex-col space-y-8">
+                                                            <div className="bg-slate-50 p-10 rounded-[3rem] w-full space-y-8 shadow-inner border border-slate-100">
+                                                                <div className="space-y-3">
+                                                                    <p className="text-orange-500 font-black text-2xl flex items-center gap-3">
+                                                                        <span className="w-3 h-3 rounded-full bg-orange-400"></span>
+                                                                        이런 마음이에요
+                                                                    </p>
+                                                                    <p className="text-4xl font-bold text-slate-700 break-keep leading-tight">{activeTooltip.def}</p>
+                                                                </div>
+                                                                <div className="pt-8 border-t-2 border-slate-200/50 space-y-3">
+                                                                    <p className="text-blue-500 font-black text-2xl flex items-center gap-3">
+                                                                        <span className="w-3 h-3 rounded-full bg-blue-400"></span>
+                                                                        이럴 때 사용해요
+                                                                    </p>
+                                                                    <p className="text-2xl font-bold italic break-keep leading-relaxed text-slate-600">"{activeTooltip.eg}"</p>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => setActiveTooltip(null)}
+                                                                className="w-full py-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-[2.5rem] font-black text-4xl shadow-xl hover:shadow-2xl active:scale-[0.98] transition-all hover:brightness-105"
+                                                            >
+                                                                알겠어!
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 우측 상단 닫기 버튼 */}
+                                                    <button
+                                                        onClick={() => setActiveTooltip(null)}
+                                                        className="absolute top-8 right-8 text-slate-300 hover:text-slate-500 transition-colors p-2 hover:bg-slate-50 rounded-full"
+                                                    >
+                                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                    </button>
+                                                </motion.div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            )}
+
+                            {step === 6 && (
+                                <motion.div key="s6" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full flex flex-col h-full space-y-4 items-center justify-center overflow-hidden py-4">
+                                    <div className="flex items-center gap-6 w-full max-w-4xl px-4">
+                                        <PencilFairy isListening={isListening} speech="왜 그런 마음이 들었는지 들려줄래?" className="shrink-0" />
+                                        <div className="flex-1 bg-white p-8 rounded-[3rem] shadow-xl border-2 border-orange-50 relative flex flex-col overflow-hidden">
+                                            <div className="flex items-center gap-4 justify-start text-orange-600 font-black text-2xl mb-4 shrink-0">
+                                                <div className="flex -space-x-2">
+                                                    {selectedFeelings.map(f => (
+                                                        <span key={f.label} className="text-4xl drop-shadow-sm z-10 bg-white rounded-full p-1 border border-orange-100">{f.icon}</span>
+                                                    ))}
+                                                </div>
+                                                <span className="ml-2">왜 이런 기분인지 적어보세요</span>
+                                            </div>
+                                            <div className="h-48 relative">
+                                                <textarea
+                                                    value={feelingReason}
+                                                    onChange={(e) => setFeelingReason(e.target.value)}
+                                                    placeholder="말하거나 직접 적어봐요! 왜 그런 기분이 들었나요?"
+                                                    className={`w-full h-full p-6 bg-slate-50 border-2 ${isListening ? 'border-red-200 ring-4 ring-red-50' : 'focus:border-orange-200 focus:bg-white border-orange-50'} rounded-[2rem] text-2xl font-black outline-none resize-none transition-all`}
+                                                />
+                                                {interimText && isListening && (
+                                                    <div className="absolute inset-0 bg-white/90 backdrop-blur-sm p-6 rounded-[2rem] border-2 border-red-400 flex flex-col items-center justify-center gap-4 z-10 text-center">
+                                                        <div className="text-red-500 text-2xl font-black animate-pulse">"{interimText}"</div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setFeelingReason(prev => prev ? prev + " " + interimText : interimText);
+                                                                setInterimText("");
+                                                            }}
+                                                            className="px-6 py-3 bg-blue-500 text-white rounded-2xl font-black text-xl shadow-lg hover:bg-blue-600 active:scale-95 transition-all"
+                                                        >
+                                                            지금 바로 입력하기
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                <button onClick={toggleListening} className={`absolute right-4 bottom-4 p-6 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95 z-20 ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-500 text-white shadow-orange-200'}`}>
+                                                    <div className="scale-[1.5]">{isListening ? <IconVolume2 /> : <IconMic />}</div>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4 w-full max-w-2xl mx-auto shrink-0">
+                                        <button onClick={handlePrevStep} className="px-10 py-5 bg-orange-50 text-orange-600 border-4 border-orange-100 rounded-[2rem] text-3xl font-black hover:bg-orange-100 transition-all shadow-md active:scale-95 active:shadow-none">이전으로</button>
+                                        <button onClick={handleNextStep} className="flex-1 py-5 bg-orange-500 text-white rounded-[2rem] text-4xl font-black shadow-[0_8px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none transition-all">일기 완성하기</button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {step === 7 && (
+                                <motion.div key="s7" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full h-full flex flex-col space-y-4 overflow-hidden py-1 px-4">
+                                    <div ref={diaryCardRef} className="flex-1 bg-white p-6 rounded-[2.5rem] shadow-xl border-[8px] border-orange-400 text-center flex flex-col justify-center items-center space-y-3 overflow-hidden relative">
+                                        <div className="flex items-center gap-2 px-5 py-1 bg-orange-100/50 rounded-full border border-orange-200 shadow-sm">
+                                            <div className="scale-75"><IconCalendar /></div>
+                                            <span className="text-xl font-black text-orange-700">{todayDate}</span>
+                                        </div>
+
+                                        <div className="shrink-0 p-4 bg-orange-50 rounded-[2.5rem] border border-orange-100 shadow-inner flex -space-x-6">
+                                            {selectedFeelings.map(f => (
+                                                <span key={f.label} className="text-[6.5rem] drop-shadow-2xl leading-none">{f.icon}</span>
+                                            ))}
+                                        </div>
+                                        <div className="space-y-4 w-full px-8">
+                                            <h3 className="text-3xl font-black text-slate-800 tracking-tight leading-none"><span className="text-orange-500">{nickname}</span>의 일기</h3>
+                                            <div className="p-5 bg-orange-50/50 rounded-[2.5rem] border-[3px] border-dashed border-orange-200 min-h-[5rem] max-h-40 overflow-y-auto custom-scrollbar flex items-center justify-center">
+                                                <p className="text-2xl font-black text-slate-700 leading-tight break-keep">
+                                                    {diaryParts.when} {diaryParts.where} {diaryParts.who} {diaryParts.what}. {additionalStory} {selectedFeelings.map(f => f.sentence).join(" ")} {feelingReason}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="shrink-0 grid grid-cols-2 gap-3 pb-1">
+                                        <button onClick={saveDiaryAsImage} disabled={isCapturing} className="flex items-center justify-center gap-2 py-3 bg-emerald-500 text-white rounded-[1.5rem] shadow-[0_6px_0_rgb(5,150,105)] font-black text-2xl hover:bg-emerald-600 hover:translate-y-1 hover:shadow-[0_4px_0_rgb(5,150,105)] transition-all active:translate-y-2 active:shadow-none">
+                                            <IconDownload /> 이미지 저장
+                                        </button>
+                                        <div className={`flex items-center justify-center gap-2 py-3 text-white rounded-[1.5rem] shadow-[0_6px_0_rgb(29,78,216)] font-black text-2xl transition-all ${saveStatus === 'success' ? 'bg-blue-600' : 'bg-blue-700'}`}>
+                                            {saveStatus === 'success' ? <div className="scale-90"><IconCheckCircle /></div> : <div className="scale-90"><IconCloudUpload /></div>}
+                                            {isSaving ? "보내는 중..." : "제출 완료!"}
+                                        </div>
+                                        <button onClick={resetAll} className="col-span-2 flex items-center justify-center gap-2 py-1 text-slate-400 font-black text-lg hover:text-orange-500 transition-colors"><IconRotateCcw /> 다시 쓰기</button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </main >
+
+                    {/* 단계별 설명 팝업 */}
+                    < AnimatePresence >
+                        {showInstruction && step === 3 && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+                                <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-white rounded-[3rem] shadow-2xl max-w-xl w-full p-10 border-4 border-orange-300 relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-orange-400 to-orange-500"></div>
+                                    <div className="flex flex-col items-center text-center space-y-6">
+                                        <div className="scale-[1.5] py-4"><PencilFairy /></div>
+                                        <div className="space-y-4">
+                                            <div className="inline-block py-2 px-6 bg-orange-100 text-orange-600 rounded-full font-black text-2xl shadow-sm border border-orange-200">
+                                                {diaryOptions[subStep].label} (단계 {subStep + 1}/4)
+                                            </div>
+                                            <h2 className="text-3xl font-black text-slate-800 break-keep leading-relaxed">
+                                                {diaryOptions[subStep].fairy}
+                                            </h2>
+                                            <p className="text-xl font-bold text-slate-500 break-keep bg-slate-50 p-6 rounded-[2rem] border-2 border-dashed border-slate-200 whitespace-pre-wrap">
+                                                {diaryOptions[subStep].instruction}
+                                            </p>
+                                        </div>
+                                        <button onClick={() => setShowInstruction(false)} className="w-full py-6 bg-orange-500 text-white rounded-[2rem] text-3xl font-black shadow-[0_8px_0_rgb(154,52,18)] hover:translate-y-1 hover:shadow-[0_6px_0_rgb(154,52,18)] transition-all active:translate-y-2 active:shadow-none">
+                                            네, 알겠어요!
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence >
+                </div >
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <script>
+        // 1. 앱스 스크립트 웹 앱 주소 (배포 후 복사한 URL)
+        const scriptURL = "https://script.google.com/macros/s/여기에_복사한_ID값/exec";
+
+        // 2. 음성 인식 결과를 구글 시트로 보내는 함수
+        function saveToGoogleSheet(finalText) {
+            // 버튼 등을 잠시 비활성화하여 중복 클릭 방지 (선택 사항)
+            console.log("전송 시작:", finalText);
+
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors', // 크로스 도메인 이슈 방지
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    timestamp: new Date().toLocaleString(),
+                    content: finalText, // 기록할 내용
+                    author: "1학년 학생" // 필요한 정보 추가 가능
+                })
+            })
+                .then(() => {
+                    alert("구글 시트에 성공적으로 저장되었습니다!");
+                })
+                .catch(error => {
+                    console.error('전송 실패:', error);
+                    alert("저장 중 오류가 발생했습니다.");
+                });
+        }
+    </script>
+</body>
+
+</html>
