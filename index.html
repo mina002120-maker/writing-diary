@@ -141,7 +141,7 @@
             const diaryCardRef = useRef(null);
 
             // 설정 관리 (localStorage 활용)
-            const [gasUrl, setGasUrl] = useState(localStorage.getItem('ONE_SENTENCE_DIARY_GAS_URL') || "");
+            const [gasUrl, setGasUrl] = useState(localStorage.getItem('ONE_SENTENCE_DIARY_GAS_URL') || "https://script.google.com/macros/s/AKfycbwIrt5fhjbHwRAb6VDQMCr1wIQ30yNbSk3o3KgJKfrEOE8337IBio40EoxW7zmXgFJ7/exec");
             const [showSettingModal, setShowSettingModal] = useState(false);
             const [urlInput, setUrlInput] = useState("");
 
@@ -1176,36 +1176,7 @@
         root.render(<App />);
     </script>
 
-    <script>
-        // 1. 앱스 스크립트 웹 앱 주소 (배포 후 복사한 URL)
-        const scriptURL = "https://script.google.com/macros/s/여기에_복사한_ID값/exec";
 
-        // 2. 음성 인식 결과를 구글 시트로 보내는 함수
-        function saveToGoogleSheet(finalText) {
-            // 버튼 등을 잠시 비활성화하여 중복 클릭 방지 (선택 사항)
-            console.log("전송 시작:", finalText);
-
-            fetch(scriptURL, {
-                method: 'POST',
-                mode: 'no-cors', // 크로스 도메인 이슈 방지
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    timestamp: new Date().toLocaleString(),
-                    content: finalText, // 기록할 내용
-                    author: "1학년 학생" // 필요한 정보 추가 가능
-                })
-            })
-                .then(() => {
-                    alert("구글 시트에 성공적으로 저장되었습니다!");
-                })
-                .catch(error => {
-                    console.error('전송 실패:', error);
-                    alert("저장 중 오류가 발생했습니다.");
-                });
-        }
-    </script>
 </body>
 
 </html>
