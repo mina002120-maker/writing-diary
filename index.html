@@ -140,8 +140,16 @@
             const recognitionRef = useRef(null);
             const diaryCardRef = useRef(null);
 
-            // 설정 관리 (localStorage 활용)
-            const [gasUrl, setGasUrl] = useState(localStorage.getItem('ONE_SENTENCE_DIARY_GAS_URL') || "https://script.google.com/macros/s/AKfycbwIrt5fhjbHwRAb6VDQMCr1wIQ30yNbSk3o3KgJKfrEOE8337IBio40EoxW7zmXgFJ7/exec");
+            // 설정 관리 (사용자 URL 강제 적용 및 localStorage 초기화)
+            const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwIrt5fhjbHwRAb6VDQMCr1wIQ30yNbSk3o3KgJKfrEOE8337IBio40EoxW7zmXgFJ7/exec";
+
+            // 기존에 '여기에_복사한_ID값' 등으로 잘못 저장된 경우 초기화
+            const savedUrl = localStorage.getItem('ONE_SENTENCE_DIARY_GAS_URL');
+            if (savedUrl && (savedUrl.includes('여기에') || savedUrl === "")) {
+                localStorage.removeItem('ONE_SENTENCE_DIARY_GAS_URL');
+            }
+
+            const [gasUrl, setGasUrl] = useState(localStorage.getItem('ONE_SENTENCE_DIARY_GAS_URL') || DEFAULT_GAS_URL);
             const [showSettingModal, setShowSettingModal] = useState(false);
             const [urlInput, setUrlInput] = useState("");
 
