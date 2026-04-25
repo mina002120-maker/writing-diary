@@ -30,12 +30,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+            display: none;
         }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #fb923c;
-            border-radius: 10px;
+        .custom-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
         }
 
         body {
@@ -136,6 +138,7 @@
             const [micStatus, setMicStatus] = useState("checking"); // checking | idle | success | error_denied | error_secure | error
             const [feelingReason, setFeelingReason] = useState("");
             const [activeTooltip, setActiveTooltip] = useState(null);
+            const [activeCategory, setActiveCategory] = useState(null);
 
             const recognitionRef = useRef(null);
             const diaryCardRef = useRef(null);
@@ -378,6 +381,9 @@
                     if (found) {
                         setNickname(found.name);
                         setSelectedId(found.id);
+                        setInterimText("");
+                    } else {
+                        setInterimText(trimmedText);
                     }
                 } else if (step === 3) {
                     // Step 3에서는 인식된 내용을 입력창에 넣고, 
@@ -448,6 +454,7 @@
 
             const handleNextStep = (feelingOverride = null) => {
                 if (isListening) recognitionRef.current.stop();
+                setInterimText("");
                 const nextStep = step + 1;
                 setStep(nextStep);
                 setProgress(prev => Math.min(prev + (100 / 7), 100));
@@ -460,6 +467,7 @@
 
             const handlePrevStep = () => {
                 if (isListening) recognitionRef.current.stop();
+                setInterimText("");
                 if (step === 3 && subStep > 0) {
                     setSubStep(prev => prev - 1);
                     setProgress(prev => prev - 4);
@@ -473,6 +481,7 @@
                 if (!value) return;
                 const key = diaryOptions[subStep].key;
                 setDiaryParts(prev => ({ ...prev, [key]: value }));
+                setInterimText("");
                 if (subStep < 3) {
                     setSubStep(subStep + 1);
                     setProgress(prev => prev + 4);
@@ -566,39 +575,57 @@
 
             const feelingList = [
                 {
-                    category: "🌟 긍정",
-                    desc: "기분 좋은 에너지가 생길 때",
+                    category: "🔴 마음이 아프거나 화가 날 때",
+                    color: "red",
+                    desc: "부정적인 감정 (빨강)",
                     items: [
-                        { label: "뿌듯하다", icon: "⭐", sentence: "무언가 해낸 것 같아 뿌듯했어!", def: "힘들게 노력해서 무언가를 해냈을 때", eg: "받아쓰기 백 점을 받았다." },
-                        { label: "설레다", icon: "💓", sentence: "마음이 두근두근 설레었어!", def: "좋은 일이 생길 것 같아 마음이 두근거릴 때", eg: "내일은 생일 파티를 하는 날이다." },
-                        { label: "개운하다", icon: "🍃", sentence: "할 일을 다 끝내서 개운해!", def: "고민이나 할 일을 다 끝내서 마음이 가벼울 때", eg: "밀린 일기를 다 써서 개운하다." },
-                        { label: "든든하다", icon: "🛡️", sentence: "누군가 내 편이 되어주어 든든했어!", def: "누군가 내 편이 되어주어 안심이 될 때", eg: "아빠가 내 손을 꼭 잡아주어 든든했다." },
-                        { label: "자랑스럽다", icon: "🏆", sentence: "정말 자랑스러운 하루였어!", def: "내가 혹은 내 주변 사람이 멋진 일을 했을 때", eg: "우리 반이 이어달리기에서 1등을 해서 자랑스럽다." }
+                        { label: "속상하다", icon: "😢", sentence: "속상하다", def: "내 마음대로 일이 안 풀리거나 아끼던 물건이 망가졌을 때", eg: "아끼던 색연필이 부러져서 속상했다." },
+                        { label: "서운하다", icon: "😔", sentence: "서운하다", def: "친구가 나랑 안 놀아주거나 엄마가 내 편을 안 들어주셨을 때", eg: "친구가 나랑 안 놀아주니 서운했다." },
+                        { label: "슬프다", icon: "😭", sentence: "슬프다", def: "기르던 동물이 아프거나 슬픈 영화를 보았을 때", eg: "기르던 햄스터가 아픈 걸 보니 슬퐜다." },
+                        { label: "외롭다", icon: "🌫️", sentence: "외롭다", def: "같이 놀 친구가 없거나 혼자 남겨졌을 때", eg: "운동장에서 혼자 놀고 있으니 외로웠다." },
+                        { label: "화나다", icon: "😡", sentence: "화나다", def: "누군가 나를 때리거나 놀렸을 때", eg: "동생이 내 장난감을 망가뜨려서 화가 났다." },
+                        { label: "짜증나다", icon: "😫", sentence: "짜증나다", def: "날씨가 너무 덥거나 하기 싫은 일을 억지로 해야 할 때", eg: "하기 싫은 숙제를 하려니 짜증이 났다." },
+                        { label: "억울하다", icon: "😣", sentence: "억울하다", def: "나는 안 그랬는데 누군가에게 오해를 받아서 혼났을 때", eg: "내가 안 깼는데 내가 깼다고 해서 억울했다." },
+                        { label: "밉다", icon: "😤", sentence: "밉다", def: "친구랑 크게 싸워서 쳐다보기도 싫을 때", eg: "나를 놀리는 친구가 정말 미웠다." },
+                        { label: "무섭다", icon: "😨", sentence: "무섭다", def: "무서운 꿈을 꾸었거나 혼자 어두운 곳에 갈 때", eg: "밤에 혼자 화장실에 가려니 무서웠다." },
+                        { label: "떨리다", icon: "💓", sentence: "떨리다", def: "친구들 앞에서 발표를 하거나 처음 무언가를 해볼 때", eg: "친구들 앞에서 발표를 하려니 긴장되고 떨렸다." },
+                        { label: "깜짝 놀라다", icon: "😲", sentence: "깜짝 놀라다", def: "갑자기 큰 소리가 났거나 예상하지 못한 일이 생겼을 때", eg: "풍선이 갑자기 빵 터져서 깜짝 놀랐다." }
                     ]
                 },
                 {
-                    category: "😶 중립",
-                    desc: "생각이 많아지는 미묘한 마음",
+                    category: "🟡 일상에서 자주 느끼는 미묘한 마음",
+                    color: "orange",
+                    desc: "중립적인 감정 (주황)",
                     items: [
-                        { label: "궁금하다", icon: "🔍", sentence: "그것이 무엇인지 참 궁금했어!", def: "모르는 것을 알고 싶어 호기심이 생길 때", eg: "화단에 핀 꽃 이름이 무엇인지 궁금하다." },
-                        { label: "쑥스럽다", icon: "😊", sentence: "기분이 좋으면서도 쑥스러웠어!", def: "부끄러우면서도 기분이 나쁘지 않을 때", eg: "친구들이 생일 축하 노래를 불러줘서 쑥스러웠다." },
-                        { label: "어리둥절하다", icon: "🌀", sentence: "무슨 일인지 어리둥절한 기분이었어!", def: "갑작스러운 상황에 상황 파악이 안 될 때", eg: "자고 일어났는데 아무도 없어서 어리둥절했다." },
-                        { label: "부럽다", icon: "✨", sentence: "남의 재능이 정말 부러웠어!", def: "남이 가진 것이나 재능을 나도 갖고 싶을 때", eg: "친구의 새 필통이 정말 부러웠다." },
-                        { label: "덤덤하다", icon: "😐", sentence: "마음이 흔들리지 않고 덤덤했어!", def: "큰 사건이 있었지만 마음이 흔들리지 않고 평온할 때", eg: "주사를 맞았는데 생각보다 아프지 않아 덤덤했다." }
+                        { label: "궁금하다", icon: "🔍", sentence: "궁금하다", def: "무엇을 알고 싶어 하는 마음", eg: "생일 선물이 무엇일지 정말 궁금하다." },
+                        { label: "쑥스럽다", icon: "😊", sentence: "쑥스럽다", def: "수줍거나 창피한 느낌이 있어 몸둘 바를 모를 때", eg: "선생님께 칭찬을 들으니 쑥스럽다." },
+                        { label: "어리둥절하다", icon: "🌀", sentence: "어리둥절하다", def: "무슨 일인지 몰라 갈피를 잡지 못할 때", eg: "갑자기 파티를 해주니 어리둥절하다." },
+                        { label: "부럽다", icon: "✨", sentence: "부럽다", def: "남의 좋은 점이나 물건을 보고 나도 그랬으면 할 때", eg: "새 자전거를 탄 친구를 보니 부럽다." },
+                        { label: "덤덤하다", icon: "😐", sentence: "덤덤하다", def: "마음에 아무런 동요가 없고 예사로울 때", eg: "주사를 맞았는데 생각보다 아프지 않고 덤덤하다." },
+                        { label: "심심하다", icon: "🥱", sentence: "심심하다", def: "하는 일이 없어 따분하고 재미가 없을 때", eg: "비가 와서 밖에서 못 노니 심심하다." },
+                        { label: "귀찮다", icon: "😑", sentence: "귀찮다", def: "마음에 들지 않거나 괴로워 피하고 싶을 때", eg: "자려고 누웠는데 불 끄기가 귀찮다." }
                     ]
                 },
                 {
-                    category: "☔️ 부정",
-                    desc: "마음이 조금 속상하거나 불편할 때",
+                    category: "🟢 기분이 좋고 행복할 때",
+                    color: "green",
+                    desc: "긍정적인 감정 (초록)",
                     items: [
-                        { label: "억울하다", icon: "💢", sentence: "내 잘못이 아닌데 억울한 기분이었어!", def: "내 잘못이 아닌데 비난을 받아 답답할 때", eg: "내가 안 깼는데 내가 깼다고 해서 억울했다." },
-                        { label: "조마조마하다", icon: "😨", sentence: "나쁜 일이 생길까 봐 조마조마했어!", def: "좋지 않은 일이 생길까 봐 걱정될 때", eg: "지각할까 봐 등굣길에 마음이 조마조마했다." },
-                        { label: "얄밉다", icon: "😤", sentence: "그 행동이 정말 얄밉게 느껴졌어!", def: "상대방의 행동이 거슬리고 화가 날 때", eg: "나를 따라 하며 메롱을 하는 짝꿍이 얄미웠다." },
-                        { label: "서운하다", icon: "😢", sentence: "기대한 대로 되지 않아 서운했어!", def: "기대했던 일이 이루어지지 않아 마음이 쓸쓸할 때", eg: "엄마가 약속한 간식을 안 사 오셔서 서운했다." },
-                        { label: "창피하다", icon: "🙈", sentence: "남들이 볼까 봐 정말 창피했어!", def: "실수나 잘못을 해서 남들이 볼까 봐 숨고 싶을 때", eg: "복도에서 넘어졌는데 친구들이 봐서 창피했다." }
+                        { label: "뿌듯하다", icon: "⭐", sentence: "뿌듯하다", def: "스스로 만족감을 느껴 마음이 가득 찰 때", eg: "어려운 퍼즐을 다 맞춰서 마음이 뿌듯하다." },
+                        { label: "설레다", icon: "💗", sentence: "설레다", def: "기대로 가득 차 마음이 두근거릴 때", eg: "내일 소풍 갈 생각을 하니 벌써 설렌다." },
+                        { label: "개운하다", icon: "🍃", sentence: "개운하다", def: "몸이나 마음이 상쾌하고 시원할 때", eg: "땀을 흘리고 목욕을 하니 몸이 개운하다." },
+                        { label: "든든하다", icon: "🛡️", sentence: "든든하다", def: "무언가 믿는 구석이 있어 마음이 평안할 때", eg: "형이 내 편을 들어주니 마음이 든든하다." },
+                        { label: "자랑스럽다", icon: "🏆", sentence: "자랑스럽다", def: "매우 만족하여 남에게 내세우고 싶을 때", eg: "우리 반이 줄다리기에서 이겨서 자랑스럽다." },
+                        { label: "좋다", icon: "☀️", sentence: "좋다", def: "기분이 아주 즐겁고 마음에 들 때", eg: "오늘 날씨가 맑아서 기분이 참 좋다." },
+                        { label: "신나다", icon: "🎡", sentence: "신나다", def: "흥겨워서 기운이 넘치고 즐거울 때", eg: "놀이공원에 도착하니 정말 신난다." },
+                        { label: "기쁘다", icon: "🎁", sentence: "기쁘다", def: "원하는 일이 이루어져 즐겁고 행복할 때", eg: "시험을 잘 봐서 선물을 받으니 기쁘다." },
+                        { label: "재미있다", icon: "😄", sentence: "재미있다", def: "즐겁고 유쾌한 기분이 들 때", eg: "친구들과 공놀이를 하니 정말 재미있다." },
+                        { label: "고맙다", icon: "💕", sentence: "고맙다", def: "남이 베푼 친절이나 도움에 마음이 즐거울 때", eg: "친구가 가방을 들어주어 정말 고맙다." },
+                        { label: "편안하다", icon: "🍀", sentence: "편안하다", def: "걱정이 없고 마음이 아주 평화로울 때", eg: "낮잠을 자고 일어나니 마음이 편안하다." }
                     ]
                 }
             ];
+
 
             return (
                 <div className="h-screen w-screen bg-[#F0F7FF] flex flex-col font-sans select-none overflow-hidden text-slate-800">
@@ -933,135 +960,247 @@
                             )}
 
                             {step === 5 && (
-                                <motion.div key="s5" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="w-full h-full flex gap-6 overflow-hidden py-2">
-                                    {/* 왼쪽 요정 영역 (사이드바 스타일) */}
+                                <motion.div key="s5" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="w-full h-full flex gap-6 overflow-hidden py-2 px-1">
+                                    {/* 왼쪽 요정 영역 */}
                                     <div className="w-[18%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-6 border-2 border-orange-50 shadow-lg shrink-0">
                                         <div className="bg-orange-100 px-6 py-1 rounded-full mb-4 shrink-0 shadow-sm border border-orange-200">
-                                            <h3 className="text-xl font-black text-orange-600">마음은?</h3>
+                                            <h3 className="text-xl font-black text-orange-600">마음 신호등</h3>
                                         </div>
-                                        <div className="scale-90 mb-4 shrink-0"><PencilFairy side isListening={isListening} speech={`오늘 네 마음은 어떠니?\n여러 개 골라도 괜찮아!`} /></div>
+                                        <div className="scale-90 mb-4 shrink-0"><PencilFairy side isListening={isListening} speech={`오늘 네 마음의 색깔은\n어떤 색이니?`} /></div>
                                         <button onClick={handlePrevStep} className="mt-auto flex items-center justify-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl hover:bg-orange-100 transition-all shrink-0 active:scale-95">
-                                            <IconRotateCcw /> 이전 단계로
+                                            <IconRotateCcw /> 이전으로
                                         </button>
                                     </div>
 
-                                    {/* 오른쪽 감정 선택 영역 */}
-                                    <div className="flex-1 flex flex-col bg-white p-6 rounded-[3rem] border-2 border-orange-50 shadow-xl overflow-hidden">
-                                        <div className="flex-1 grid grid-cols-5 gap-3 p-1">
-                                            {feelingList.flatMap((cat, catIdx) =>
-                                                cat.items.map((f) => {
-                                                    const isSelected = selectedFeelings.some(sf => sf.label === f.label);
+                                    {/* 오른쪽 감정 선택 영역 (큰 신호등 방식) */}
+                                    <div className="flex-1 flex flex-col bg-white p-6 rounded-[3.5rem] border-2 border-orange-50 shadow-xl overflow-hidden items-center justify-start pt-8 relative">
+                                        <div className="flex flex-col items-center gap-3 mb-2">
+                                            <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                                                <span className="text-orange-500">지금 마음의 색깔</span>은 무엇인가요?
+                                            </h2>
+
+                                            {/* 초소형 가로형 신호등 */}
+                                            <div className="bg-slate-800 p-6 px-10 rounded-[6rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] flex flex-row gap-10 border-[12px] border-slate-700 relative mt-2">
+                                                <div className="absolute top-[-1.2rem] left-1/4 w-4 h-12 bg-slate-700 rounded-full"></div>
+                                                <div className="absolute top-[-1.2rem] right-1/4 w-4 h-12 bg-slate-700 rounded-full"></div>
+
+                                                {feelingList.map((cat, idx) => {
+                                                    const selectedInCat = selectedFeelings.filter(f => cat.items.some(i => i.label === f.label));
                                                     return (
-                                                        <motion.div
-                                                            key={f.label}
-                                                            whileHover={{ scale: 1.02 }}
-                                                            whileTap={{ scale: 0.98 }}
-                                                            onClick={() => {
-                                                                if (isSelected) {
-                                                                    setSelectedFeelings(selectedFeelings.filter(sf => sf.label !== f.label));
-                                                                } else {
-                                                                    setSelectedFeelings([...selectedFeelings, f]);
-                                                                }
-                                                            }}
-                                                            className={`relative flex flex-col items-center justify-center p-3 rounded-[2rem] border-2 cursor-pointer transition-all h-full
-                                                                ${isSelected ? 'border-orange-500 bg-orange-50 shadow-inner' : 'border-transparent bg-slate-50 hover:bg-white hover:border-orange-200'}`}
-                                                        >
-                                                            <div className="text-4xl mb-1">{f.icon}</div>
-                                                            <div className={`text-xl font-black break-keep text-center leading-tight ${isSelected ? 'text-orange-600' : 'text-slate-600'}`}>{f.label}</div>
-                                                            <button
-                                                                className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-yellow-400 text-white flex items-center justify-center text-2xl font-black hover:bg-yellow-500 z-20 shadow-lg border-4 border-white transition-transform hover:scale-110 active:scale-95"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    // feelingList에서 현재 항목 찾기
-                                                                    const feeling = feelingList.find(c => c.items.some(i => i.label === f.label)).items.find(i => i.label === f.label);
-                                                                    setActiveTooltip(feeling);
-                                                                }}
+                                                        <div key={idx} className="flex flex-col items-center gap-4">
+                                                            <motion.button
+                                                                whileHover={{ scale: 1.08 }}
+                                                                whileTap={{ scale: 0.92 }}
+                                                                onClick={() => setActiveCategory(cat)}
+                                                                className={`w-36 h-36 rounded-full border-[8px] border-white/20 shadow-[inset_0_4px_8px_rgba(255,255,255,0.3),0_10px_20px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center transition-all relative
+                                                                    ${cat.color === 'red' ? 'bg-red-500 shadow-red-500/60 ring-6 ring-red-500/10' :
+                                                                        cat.color === 'orange' ? 'bg-amber-500 shadow-amber-500/60 ring-6 ring-amber-500/10' :
+                                                                            'bg-emerald-500 shadow-emerald-500/60 ring-6 ring-emerald-500/10'
+                                                                    }`}
                                                             >
-                                                                ?
-                                                            </button>
-                                                        </motion.div>
+                                                                {/* 선택 개수 뱃지 */}
+                                                                {selectedInCat.length > 0 && (
+                                                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-3 -right-3 w-14 h-14 bg-blue-600 text-white rounded-full border-[6px] border-white flex items-center justify-center text-2xl font-black shadow-xl z-20">
+                                                                        {selectedInCat.length}
+                                                                    </motion.div>
+                                                                )}
+
+                                                                {/* 반짝임 효과 */}
+                                                                <div className="absolute top-6 left-10 w-12 h-6 bg-white/40 rounded-full -rotate-[15deg] blur-[2px]"></div>
+                                                            </motion.button>
+
+                                                            {/* 레이블 말풍선 (컴팩트) */}
+                                                            <div className="w-48 flex flex-col items-center gap-1">
+                                                                <div className="w-2 h-4 bg-slate-700 rounded-full"></div>
+                                                                <div className="bg-white p-3 py-4 rounded-[2rem] shadow-xl border-2 border-slate-50 flex flex-col items-center gap-1 w-full">
+                                                                    <span className={`text-xl font-black ${cat.color === 'red' ? 'text-red-500' : cat.color === 'orange' ? 'text-amber-500' : 'text-emerald-500'}`}>
+                                                                        {cat.desc.split(' ')[1].replace('(', '').replace(')', '')}
+                                                                    </span>
+                                                                    <span className="text-sm font-bold text-slate-400 break-keep text-center leading-tight">{cat.category.split(' ').slice(1).join(' ')}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     );
-                                                })
-                                            )}
+                                                })}
+                                            </div>
                                         </div>
-                                        <div className="mt-4 pt-4 border-t border-orange-50 shrink-0">
+
+                                        {/* 하단 진행 바 */}
+                                        <div className="w-full mt-auto pt-8 border-t-2 border-slate-50 flex items-center justify-between">
+                                            <div className="flex -space-x-4">
+                                                {selectedFeelings.map((f, i) => (
+                                                    <motion.div initial={{ scale: 0, y: 20 }} animate={{ scale: 1, y: 0 }} key={i} className="w-16 h-16 rounded-full bg-white border-4 border-orange-100 shadow-lg flex items-center justify-center text-3xl z-[10]" style={{ zIndex: 10 + i }}>
+                                                        {f.icon}
+                                                    </motion.div>
+                                                ))}
+                                                {selectedFeelings.length === 0 && (
+                                                    <p className="text-xl font-bold text-slate-400 ml-4 h-16 flex items-center italic">신호등의 불을 켜서 마음을 선택해 주세요!</p>
+                                                )}
+                                            </div>
                                             <button
                                                 onClick={handleNextStep}
                                                 disabled={selectedFeelings.length === 0}
-                                                className={`w-full py-4 rounded-[2rem] text-3xl font-black shadow-[0_6px_0_rgb(154,52,18)] active:translate-y-1 active:shadow-none transition-all ${selectedFeelings.length > 0 ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none active:translate-y-0'}`}
+                                                className={`px-16 py-6 rounded-[2.5rem] text-4xl font-black shadow-[0_10px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none transition-all ${selectedFeelings.length > 0 ? 'bg-orange-500 text-white hover:brightness-110' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none active:translate-y-0 grayscale'}`}
                                             >
-                                                감정 선택 완료! {selectedFeelings.length > 0 && `(${selectedFeelings.length}개)`}
+                                                기록하러 가기! {selectedFeelings.length > 0 && `(${selectedFeelings.length})`}
                                             </button>
                                         </div>
-                                    </div>
 
-                                    {/* 감정 설명 팝업 (모달) */}
-                                    <AnimatePresence>
-                                        {activeTooltip && typeof activeTooltip === 'object' && (
-                                            <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
-                                                onClick={() => setActiveTooltip(null)}
-                                            >
+                                        {/* 감정 선택 팝업 모달 */}
+                                        <AnimatePresence>
+                                            {activeCategory && (
                                                 <motion.div
-                                                    initial={{ scale: 0.9, y: 20 }}
-                                                    animate={{ scale: 1, y: 0 }}
-                                                    exit={{ scale: 0.9, y: 20 }}
-                                                    className="bg-white w-full max-w-5xl rounded-[4rem] shadow-2xl p-12 border-4 border-yellow-200 relative overflow-hidden"
-                                                    onClick={(e) => e.stopPropagation()}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    className="fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-8"
+                                                    onClick={() => setActiveCategory(null)}
                                                 >
-                                                    <div className="flex items-center gap-12">
-                                                        {/* 왼쪽: 아이콘 및 큰 제목 */}
-                                                        <div className="flex flex-col items-center space-y-6 shrink-0 border-r-4 border-slate-50 pr-12">
-                                                            <div className="text-[10rem] leading-none mb-2 drop-shadow-sm">{activeTooltip.icon}</div>
-                                                            <div className="text-center space-y-3">
-                                                                <h3 className="text-6xl font-black text-slate-800 tracking-tight">"{activeTooltip.label}"</h3>
-                                                                <div className="h-2 w-24 bg-yellow-400 rounded-full mx-auto" />
-                                                            </div>
-                                                        </div>
-
-                                                        {/* 오른쪽: 설명 및 예시 */}
-                                                        <div className="flex-1 flex flex-col space-y-8">
-                                                            <div className="bg-slate-50 p-10 rounded-[3rem] w-full space-y-8 shadow-inner border border-slate-100">
-                                                                <div className="space-y-3">
-                                                                    <p className="text-orange-500 font-black text-2xl flex items-center gap-3">
-                                                                        <span className="w-3 h-3 rounded-full bg-orange-400"></span>
-                                                                        이런 마음이에요
-                                                                    </p>
-                                                                    <p className="text-4xl font-bold text-slate-700 break-keep leading-tight">{activeTooltip.def}</p>
-                                                                </div>
-                                                                <div className="pt-8 border-t-2 border-slate-200/50 space-y-3">
-                                                                    <p className="text-blue-500 font-black text-2xl flex items-center gap-3">
-                                                                        <span className="w-3 h-3 rounded-full bg-blue-400"></span>
-                                                                        이럴 때 사용해요
-                                                                    </p>
-                                                                    <p className="text-2xl font-bold italic break-keep leading-relaxed text-slate-600">"{activeTooltip.eg}"</p>
+                                                    <motion.div
+                                                        initial={{ scale: 0.9, y: 40 }}
+                                                        animate={{ scale: 1, y: 0 }}
+                                                        exit={{ scale: 0.9, y: 40 }}
+                                                        className="bg-white w-full max-w-6xl rounded-[4rem] shadow-2xl border-[12px] border-slate-50 overflow-hidden flex flex-col"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        {/* 헤더 */}
+                                                        <div className={`p-10 flex items-center justify-between border-b-4 ${activeCategory.color === 'red' ? 'bg-red-50/50 border-red-100' :
+                                                            activeCategory.color === 'orange' ? 'bg-amber-50/50 border-amber-100' :
+                                                                'bg-emerald-50/50 border-emerald-100'
+                                                            }`}>
+                                                            <div className="flex items-center gap-6">
+                                                                <div className={`w-14 h-14 rounded-full border-4 border-white shadow-md ${activeCategory.color === 'red' ? 'bg-red-500' :
+                                                                    activeCategory.color === 'orange' ? 'bg-amber-500' :
+                                                                        'bg-emerald-500'
+                                                                    }`}></div>
+                                                                <div>
+                                                                    <h3 className="text-4xl font-extrabold text-slate-800">{activeCategory.category}</h3>
+                                                                    <p className="text-xl font-bold text-slate-400 mt-1">{activeCategory.desc}</p>
                                                                 </div>
                                                             </div>
-                                                            <button
-                                                                onClick={() => setActiveTooltip(null)}
-                                                                className="w-full py-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-[2.5rem] font-black text-4xl shadow-xl hover:shadow-2xl active:scale-[0.98] transition-all hover:brightness-105"
-                                                            >
-                                                                알겠어!
+                                                            <button onClick={() => setActiveCategory(null)} className="p-4 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-colors">
+                                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                                             </button>
                                                         </div>
-                                                    </div>
 
-                                                    {/* 우측 상단 닫기 버튼 */}
-                                                    <button
-                                                        onClick={() => setActiveTooltip(null)}
-                                                        className="absolute top-8 right-8 text-slate-300 hover:text-slate-500 transition-colors p-2 hover:bg-slate-50 rounded-full"
-                                                    >
-                                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                                    </button>
+                                                        {/* 감정 그리드 */}
+                                                        <div className="p-10 overflow-y-auto max-h-[75vh] custom-scrollbar grid grid-cols-4 gap-6 bg-slate-50/30">
+                                                            {activeCategory.items.map((f) => {
+                                                                const isSelected = selectedFeelings.some(sf => sf.label === f.label);
+                                                                const colorSet = activeCategory.color === 'red' ? { border: 'border-red-500', text: 'text-red-600', shadow: 'shadow-red-100' } :
+                                                                    activeCategory.color === 'orange' ? { border: 'border-amber-500', text: 'text-amber-600', shadow: 'shadow-amber-100' } :
+                                                                        { border: 'border-emerald-500', text: 'text-emerald-600', shadow: 'shadow-emerald-100' };
+
+                                                                return (
+                                                                    <motion.div
+                                                                        key={f.label}
+                                                                        whileHover={{ scale: 1.05 }}
+                                                                        whileTap={{ scale: 0.95 }}
+                                                                        onClick={() => {
+                                                                            if (isSelected) {
+                                                                                setSelectedFeelings(selectedFeelings.filter(sf => sf.label !== f.label));
+                                                                            } else {
+                                                                                setSelectedFeelings([...selectedFeelings, f]);
+                                                                            }
+                                                                        }}
+                                                                        className={`relative flex flex-col items-center justify-center p-6 rounded-[3rem] border-4 cursor-pointer transition-all h-full min-h-[160px]
+                                                                            ${isSelected ? `bg-white shadow-2xl scale-105 ${colorSet.border} ${colorSet.shadow}` : 'border-transparent bg-white hover:border-slate-200 shadow-sm'}`}
+                                                                    >
+                                                                        <div className="text-6xl mb-4">{f.icon}</div>
+                                                                        <div className={`text-2xl font-black break-keep text-center leading-tight ${isSelected ? colorSet.text : 'text-slate-600'}`}>{f.label}</div>
+                                                                        <button
+                                                                            className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center text-2xl font-black hover:bg-black z-20 shadow-lg border-4 border-white"
+                                                                            onClick={(e) => { e.stopPropagation(); setActiveTooltip(f); }}
+                                                                        >
+                                                                            ?
+                                                                        </button>
+                                                                    </motion.div>
+                                                                );
+                                                            })}
+                                                        </div>
+
+                                                        {/* 푸터 확인 버튼 */}
+                                                        <div className="p-10 border-t-4 border-slate-50 bg-white">
+                                                            <button
+                                                                onClick={() => setActiveCategory(null)}
+                                                                className={`w-full py-6 rounded-[2.5rem] text-4xl font-black shadow-xl transition-all brightness-110 text-white ${activeCategory.color === 'red' ? 'bg-red-500 shadow-red-200' :
+                                                                    activeCategory.color === 'orange' ? 'bg-amber-500 shadow-amber-200' :
+                                                                        'bg-emerald-500 shadow-emerald-200'
+                                                                    }`}
+                                                            >
+                                                                선택 완료
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
                                                 </motion.div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                            )}
+                                            {activeTooltip && typeof activeTooltip === 'object' && (
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    className="fixed inset-0 z-[120] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6"
+                                                    onClick={() => setActiveTooltip(null)}
+                                                >
+                                                    <motion.div
+                                                        initial={{ scale: 0.9, y: 30 }}
+                                                        animate={{ scale: 1, y: 0 }}
+                                                        exit={{ scale: 0.9, y: 30 }}
+                                                        className="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl p-12 border-8 border-orange-50 relative overflow-hidden"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <div className="flex items-center gap-12">
+                                                            {/* 왼쪽: 아이콘 및 큰 제목 */}
+                                                            <div className="flex flex-col items-center space-y-6 shrink-0 border-r-4 border-slate-50 pr-12">
+                                                                <div className="text-[12rem] leading-none mb-2 drop-shadow-xl select-none">{activeTooltip.icon}</div>
+                                                                <div className="text-center space-y-3">
+                                                                    <h3 className="text-6xl font-black text-slate-800 tracking-tight">"{activeTooltip.label}"</h3>
+                                                                    <div className="h-2 w-24 bg-orange-400 rounded-full mx-auto" />
+                                                                </div>
+                                                            </div>
+
+                                                            {/* 오른쪽: 설명 및 예시 */}
+                                                            <div className="flex-1 flex flex-col space-y-8">
+                                                                <div className="bg-orange-50/50 p-10 rounded-[3rem] w-full space-y-8 shadow-inner border border-orange-100">
+                                                                    <div className="space-y-3">
+                                                                        <p className="text-orange-600 font-bold text-2xl flex items-center gap-3">
+                                                                            <span className="w-4 h-4 rounded-full bg-orange-500"></span>
+                                                                            이런 마음이에요
+                                                                        </p>
+                                                                        <p className="text-4xl font-black text-slate-700 break-keep leading-tight">{activeTooltip.def}</p>
+                                                                    </div>
+                                                                    <div className="pt-8 border-t-2 border-orange-200/30 space-y-3">
+                                                                        <p className="text-blue-500 font-bold text-2xl flex items-center gap-3">
+                                                                            <span className="w-4 h-4 rounded-full bg-blue-500"></span>
+                                                                            이럴 때 써요!
+                                                                        </p>
+                                                                        <p className="text-3xl font-bold italic break-keep leading-relaxed text-slate-600 bg-white p-6 rounded-2xl border border-blue-50 shadow-sm">"{activeTooltip.eg}"</p>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => setActiveTooltip(null)}
+                                                                    className="w-full py-6 bg-gradient-to-r from-orange-400 to-orange-600 text-white rounded-[2.5rem] font-black text-4xl shadow-xl hover:shadow-2xl active:scale-95 transition-all hover:brightness-110"
+                                                                >
+                                                                    알겠어요!
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 우측 상단 닫기 버튼 */}
+                                                        <button
+                                                            onClick={() => setActiveTooltip(null)}
+                                                            className="absolute top-8 right-8 text-slate-300 hover:text-slate-500 transition-colors p-2 hover:bg-slate-50 rounded-full"
+                                                        >
+                                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                        </button>
+                                                    </motion.div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </motion.div>
                             )}
+
 
                             {step === 6 && (
                                 <motion.div key="s6" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full flex flex-col h-full space-y-4 items-center justify-center overflow-hidden py-4">
@@ -1128,7 +1267,7 @@
                                             <h3 className="text-3xl font-black text-slate-800 tracking-tight leading-none"><span className="text-orange-500">{nickname}</span>의 일기</h3>
                                             <div className="p-5 bg-orange-50/50 rounded-[2.5rem] border-[3px] border-dashed border-orange-200 min-h-[5rem] max-h-40 overflow-y-auto custom-scrollbar flex items-center justify-center">
                                                 <p className="text-2xl font-black text-slate-700 leading-tight break-keep">
-                                                    {diaryParts.when} {diaryParts.where} {diaryParts.who} {diaryParts.what}. {additionalStory} {selectedFeelings.map(f => f.sentence).join(" ")} {feelingReason}
+                                                    {diaryParts.when} {diaryParts.where} {diaryParts.who} {diaryParts.what}. {additionalStory} {selectedFeelings.map(f => f.label).join(" ")} {feelingReason}
                                                 </p>
                                             </div>
                                         </div>
