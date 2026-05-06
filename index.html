@@ -168,7 +168,7 @@
             const diaryCardRef = useRef(null);
 
             // 설정 관리 (사용자 URL 강제 적용 및 localStorage 초기화)
-            const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxgd2ulYIx2QEYJdhXFkThZzRp78D4qhK0OokfjaffXHU8XUTwwoNACxaG_QGsTXjuDEQ/exec";
+            const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwoe39VLz2TavidexbXqPh5tRFY0PFBQYHceTY6-NjP2sVioh7_IiPFTNnplBkxKntVLQ/exec";
 
             // 기존에 '여기에_복사한_ID값' 등으로 잘못 저장된 경우 초기화
             const savedUrl = localStorage.getItem('ONE_SENTENCE_DIARY_GAS_URL');
@@ -545,8 +545,8 @@
                     nickname, 
                     diaryText: combinedDiary, 
                     feeling: combinedFeelings, 
-                    evaluation1: `${evaluation.q1}별`, 
-                    evaluation2: `${evaluation.q2}별` 
+                    evaluation1: evaluation.q1 > 0 ? '⭐'.repeat(evaluation.q1) : '미평가', 
+                    evaluation2: evaluation.q2 > 0 ? '⭐'.repeat(evaluation.q2) : '미평가' 
                 };
 
                 // 1. Google Apps Script 내부 실행 시
@@ -1306,7 +1306,7 @@
                                                         initial={{ opacity: 0 }}
                                                         animate={{ opacity: 1 }}
                                                         exit={{ opacity: 0 }}
-                                                        className="fixed inset-0 z-[120] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6"
+                                                        className="fixed inset-0 z-[160] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6"
                                                         onClick={() => setActiveTooltip(null)}
                                                     >
                                                         <motion.div
@@ -1474,7 +1474,9 @@
                                         <div className="flex-[3.5] bg-orange-50/50 rounded-[3rem] p-8 border-4 border-orange-100 shadow-sm flex flex-col gap-4 overflow-y-auto custom-scrollbar">
                                             <div className="flex items-center justify-center gap-2 mb-2">
                                                 <span className="text-3xl">✨</span>
-                                                <h4 className="text-4xl font-black text-orange-700">나의 일기 스스로 평가하기</h4>
+                                                <h4 className="text-4xl font-black text-orange-700 text-center leading-snug">
+                                                    나의 일기<br/>스스로 평가하기
+                                                </h4>
                                                 <span className="text-3xl">✨</span>
                                             </div>
                                             
