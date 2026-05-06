@@ -163,12 +163,13 @@
             const [activeTooltip, setActiveTooltip] = useState(null);
             const [activeCategory, setActiveCategory] = useState(null);
             const [evaluation, setEvaluation] = useState({ q1: 0, q2: 0 });
+            const [hasAutoSaved, setHasAutoSaved] = useState(false);
 
             const recognitionRef = useRef(null);
             const diaryCardRef = useRef(null);
 
             // 설정 관리 (사용자 URL 강제 적용 및 localStorage 초기화)
-            const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwoe39VLz2TavidexbXqPh5tRFY0PFBQYHceTY6-NjP2sVioh7_IiPFTNnplBkxKntVLQ/exec";
+            const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxe5NloTad_2Wu2gLMGby5JIbQNLBIiRbLDwwp4klGknk9kekv5ZxlDo5y5TWoTQI5X5w/exec";
 
             // 기존에 '여기에_복사한_ID값' 등으로 잘못 저장된 경우 초기화
             const savedUrl = localStorage.getItem('ONE_SENTENCE_DIARY_GAS_URL');
@@ -198,6 +199,14 @@
                     return () => clearTimeout(timer);
                 }
             }, [step, micStatus]);
+
+            // 자기 평가 완료 시 자동 저장
+            useEffect(() => {
+                if (step === 7 && evaluation.q1 > 0 && evaluation.q2 > 0 && !hasAutoSaved) {
+                    saveToGoogleSheets();
+                    setHasAutoSaved(true);
+                }
+            }, [step, evaluation.q1, evaluation.q2, hasAutoSaved]);
 
             useEffect(() => {
                 // 오늘 날짜 설정 (YYYY년 MM월 DD일)
@@ -502,9 +511,9 @@
                 setStep(nextStep);
                 setProgress(prev => Math.min(prev + (100 / 7), 100));
 
-                // Step 6 (Reason) -> Step 7 (Card) 자동 제출
+                // Step 6 (Reason) -> Step 7 (Card) 
                 if (nextStep === 7) {
-                    saveToGoogleSheets(feelingOverride);
+                    // 이제 자기 평가 완료 시 자동 저장하므로 여기서는 호출하지 않음
                 }
             };
 
@@ -567,14 +576,17 @@
                         });
                         setSaveStatus('success');
                         setTimeout(() => setSaveStatus(null), 3000);
+                        setHasAutoSaved(true);
                     } catch (e) { setSaveStatus('error'); }
                     finally { setIsSaving(false); }
                 }
                 else {
                     console.log("로컬 저장 시뮬레이션:", payload);
-                    setTimeout(() => { setSaveStatus('success'); setIsSaving(false); }, 1000);
+                    setTimeout(() => { setSaveStatus('success'); setIsSaving(false); setHasAutoSaved(true); }, 1000);
                 }
             };
+
+
 
             const updateGasUrl = () => {
                 const trimmed = urlInput.trim();
@@ -601,10 +613,21 @@
             };
 
             const resetAll = () => {
-                setStep(0); setSubStep(0); setNickname(""); setSelectedId("");
+                setStep(2);
+                setNickname("");
+                setSelectedId("");
                 setDiaryParts({ when: "", where: "", who: "", what: "" });
-                setAdditionalStory(""); setFeelingReason(""); setSelectedFeelings([]); setProgress(0); setEvaluation({ q1: 0, q2: 0 });
-                // 리셋 시: granted면 success, 나머지는 모두 idle (denied여도 버튼 클릭 가능하게)
+                setSubStep(0);
+                setAdditionalStory("");
+                setSelectedFeelings([]);
+                setFeelingReason("");
+                setEvaluation({ q1: 0, q2: 0 });
+                setHasAutoSaved(false);
+                setProgress(0);
+                setInterimText("");
+                speechBaseTextRef.current = "";
+
+                // 리셋 시 마이크 상태 재확인
                 if (window.location.protocol === 'file:') {
                     setMicStatus('error_file');
                 } else if (navigator.permissions && navigator.permissions.query) {
