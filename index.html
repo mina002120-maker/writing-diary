@@ -36,7 +36,7 @@
    ║  4️⃣  GitHub에 push → 끝!                                      ║
    ╚══════════════════════════════════════════════════════════════╝ */
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzVOZCL9IS2HoKll2rwdD9pLIvEcGRcZLcx7Z90iaBEf0thPBgjrEOhPptpANFbUSRzsQ/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyjBCLkjCJceEU9a30SaX_9n-atgmlGamz996dnQjue5hZ223ebFftKaNQZoY42i2QtLg/exec";
 
 /* ══════════════════════════════════════════════════════════════
    ↑ 이 한 줄만 수정하면 됩니다. 아래는 건드리지 마세요.
@@ -90,7 +90,7 @@ const PencilFairy=({className="",speech="",mini=false,side=false,isListening=fal
 const Toast=({status,isSaving})=>{
   if(!status&&!isSaving)return null;
   return(
-    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[300] toast-anim pointer-events-none">
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] toast-anim pointer-events-none">
       {isSaving&&!status&&(
         <div className="flex items-center gap-3 bg-slate-800 text-white px-8 py-4 rounded-2xl shadow-2xl text-xl font-black">
           <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" strokeOpacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
@@ -444,19 +444,6 @@ const App=()=>{
 
       {/* 토스트 */}
       <Toast status={saveStatus} isSaving={isSaving}/>
-
-      {/* 🔗 GAS 연결 상태 바 — 최상단 (코드의 GAS_URL 값을 표시) */}
-      <div className="w-full bg-white border-b-2 border-orange-100 px-4 py-3 flex items-center gap-3 shrink-0 shadow-sm">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 ${isGasUrlConfigured?'bg-emerald-100':'bg-amber-100 animate-pulse'}`}>
-          {isGasUrlConfigured?'✅':'⚠️'}
-        </div>
-        <div className="flex flex-col min-w-0 flex-1">
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">🔗 Google Apps Script 연결 URL</span>
-          <span className={`text-sm font-black truncate ${isGasUrlConfigured?'text-emerald-700':'text-amber-700'}`}>
-            {isGasUrlConfigured?GAS_URL:'⚠️ GAS_URL 미설정 — HTML 코드 맨 위의 GAS_URL을 본인의 배포 URL로 수정해 주세요'}
-          </span>
-        </div>
-      </div>
 
       {/* 프로그레스 바 */}
       <div className="w-full px-12 pt-8 shrink-0">
