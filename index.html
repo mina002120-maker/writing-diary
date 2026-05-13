@@ -578,7 +578,7 @@ const CARD_POOL = [/* ── 언제 (30개) ── */
   key: 'where',
   label: '어디서',
   value: '학원에서',
-  emoji: '✏️',
+  emoji: '📚',
   color: 'blue'
 }, {
   key: 'where',
@@ -910,7 +910,7 @@ const CARD_POOL = [/* ── 언제 (30개) ── */
   key: 'what',
   label: '무엇을',
   value: '글씨를 썼다',
-  emoji: '✏️',
+  emoji: '📝',
   color: 'red'
 }, {
   key: 'what',
@@ -1702,13 +1702,6 @@ function App() {
       r.onstart = function () {
         setListening(true);
       };
-      r.onresult = function (e) {
-        var s = "";
-        for (var i = e.resultIndex; i < e.results.length; i++) {
-          if (!e.results[i].isFinal) s += e.results[i][0].transcript;
-        }
-        setInterim(s);
-      };
       r.onend = function () {
         setListening(false);
       };
@@ -1717,6 +1710,24 @@ function App() {
       };
       recRef.current = r;
     }
+    /* onresult 매번 재할당 - 최신 closure 사용 (자동 완료용) */
+    recRef.current.onresult = function (e) {
+      var finalText = "";
+      var interimText = "";
+      for (var i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript;else interimText += e.results[i][0].transcript;
+      }
+      setInterim(finalText + interimText);
+      /* 최종 결과 발생 시 자동 완료 */
+      if (finalText.trim()) {
+        setTimeout(function () {
+          try {
+            recRef.current.stop();
+          } catch (_e) {}
+          subDone(finalText.trim());
+        }, 500);
+      }
+    };
     if (listening) recRef.current.stop();else {
       try {
         recRef.current.start();
@@ -1904,12 +1915,20 @@ function App() {
       className: "text-orange-200"
     }, "..."));
   })), dpExs && /*#__PURE__*/React.createElement("div", {
-    className: "w-full mt-1 pt-2 border-t-2 border-dashed border-orange-300"
+    className: "w-full mt-2 -mx-10 -mb-3 px-6 py-3 bg-white rounded-b-[2.3rem] border-t-2 border-dashed border-orange-300"
   }, /*#__PURE__*/React.createElement("p", {
-    className: "text-sm font-black text-orange-700 text-center mb-1"
+    className: "text-sm font-black text-orange-700 text-left mb-2"
   }, "\u2728 \"", /*#__PURE__*/React.createElement("span", {
     className: "text-red-500"
-  }, drawn.value), "\" \uC774\uB807\uAC8C \uC368\uBD10\uC694!"), dpExs.map(function (ex, i) {
+  }, drawn.value), "\" \uC774\uB807\uAC8C \uC368\uBD10\uC694!"), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-3 items-stretch"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-amber-100 rounded-xl px-3 flex items-center justify-center shrink-0 border-2 border-amber-300"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-orange-700 font-black text-base"
+  }, "\uC608\uC2DC")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col"
+  }, dpExs.map(function (ex, i) {
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       className: "grid grid-cols-4 w-full gap-4 py-1"
@@ -1920,7 +1939,7 @@ function App() {
         className: "text-center text-base font-bold break-keep leading-tight " + (isDrawn ? "text-red-500 font-black" : "text-slate-600")
       }, val);
     }));
-  })));
+  })))));
   return /*#__PURE__*/React.createElement("div", {
     className: "h-screen w-screen bg-[#F0F7FF] flex flex-col font-sans select-none overflow-hidden text-slate-800"
   }, (isSaving || saveStatus) && /*#__PURE__*/React.createElement("div", {
@@ -1955,7 +1974,11 @@ function App() {
     points: "9 22 9 12 15 12 15 22"
   })), "\uD648"), step > 0 && getStepLabel() && /*#__PURE__*/React.createElement("span", {
     className: "px-4 py-2 bg-orange-100 text-orange-700 rounded-2xl font-black text-base whitespace-nowrap shadow-sm border border-orange-200"
-  }, getStepLabel())), /*#__PURE__*/React.createElement("div", {
+  }, getStepLabel()), step > 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: goPrev,
+    title: "\uC774\uC804",
+    className: "flex items-center gap-1 px-3 py-2 bg-white border-2 border-orange-200 text-orange-600 rounded-2xl font-black text-base hover:bg-orange-50 active:scale-95 shadow-sm"
+  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
     className: "flex-1 h-3 bg-white rounded-full border border-slate-200 shadow-inner overflow-hidden flex items-center px-1"
   }, /*#__PURE__*/React.createElement(motion.div, {
     animate: {
@@ -1986,9 +2009,7 @@ function App() {
     className: "flex flex-col items-center justify-center space-y-8 w-full h-full"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col items-center gap-4"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "text-8xl"
-  }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(PencilFairy, null), /*#__PURE__*/React.createElement("div", {
     className: "bg-white px-8 py-1 rounded-full border-2 border-orange-100"
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-orange-600 font-black text-lg"
@@ -2056,10 +2077,11 @@ function App() {
     },
     className: "w-full max-w-4xl space-y-8 text-center flex flex-col justify-center px-10"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-8 mb-4"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "text-7xl"
-  }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-6 mb-4"
+  }, /*#__PURE__*/React.createElement(PencilFairy, {
+    mini: true,
+    className: "shrink-0"
+  }), /*#__PURE__*/React.createElement("div", {
     className: "flex-1 text-left"
   }, /*#__PURE__*/React.createElement("p", {
     className: "text-3xl font-black text-slate-400 mb-2"
@@ -2270,13 +2292,6 @@ function App() {
     },
     className: "w-full h-full flex flex-col gap-3 overflow-hidden"
   }, DPBar, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-3 shrink-0 px-1"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-base font-black text-orange-500 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 whitespace-nowrap"
-  }, sub + 1, "/", activeOpts.length, " \uB2E8\uACC4"), /*#__PURE__*/React.createElement("button", {
-    onClick: goPrev,
-    className: "ml-auto flex items-center gap-2 px-5 py-3 bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-lg hover:bg-orange-100 active:scale-95 whitespace-nowrap shrink-0"
-  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
     className: "flex-1 flex gap-4 overflow-hidden min-h-0"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col gap-3 overflow-hidden transition-all duration-300 " + (showHint ? "w-5/12" : "flex-1")
@@ -2333,13 +2348,15 @@ function App() {
       setShowHint(!showHint);
     },
     className: "flex items-center gap-2 px-6 py-4 rounded-2xl font-black text-xl border-2 active:scale-95 whitespace-nowrap " + (showHint ? "bg-amber-500 text-white border-amber-400 shadow-md" : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100")
-  }, "\uD83D\uDD0D \uD78C\uD2B8 ", showHint ? "닫기" : "보기"), interim && /*#__PURE__*/React.createElement("button", {
+  }, "\uD83D\uDD0D \uD78C\uD2B8 ", showHint ? "닫기" : "보기"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
-      subDone(interim);
-      setInterim("");
+      if (interim) {
+        subDone(interim);
+        setInterim("");
+      }
       stopListen();
     },
-    className: "ml-auto flex items-center gap-2 px-10 py-4 bg-orange-500 text-white rounded-2xl font-black text-xl shadow-[0_4px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-none whitespace-nowrap"
+    className: "ml-auto flex items-center gap-2 px-10 py-4 rounded-2xl font-black text-xl whitespace-nowrap " + (interim ? "bg-orange-500 text-white shadow-[0_4px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-none" : "bg-orange-200 text-orange-400 cursor-not-allowed")
   }, /*#__PURE__*/React.createElement(IconCheck, null), " \uC644\uB8CC")))), /*#__PURE__*/React.createElement(AnimatePresence, null, showHint && /*#__PURE__*/React.createElement(motion.div, {
     initial: {
       opacity: 0,
@@ -2398,9 +2415,9 @@ function App() {
     className: "bg-orange-100 px-6 py-1 rounded-full mb-4 shadow-sm border border-orange-200"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "text-xl font-black text-orange-600"
-  }, "\uC774\uC57C\uAE30 \uB354\uD558\uAE30")), /*#__PURE__*/React.createElement("div", {
-    className: "text-6xl mb-4"
-  }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("button", {
+  }, "\uC774\uC57C\uAE30 \uB354\uD558\uAE30")), /*#__PURE__*/React.createElement(PencilFairy, {
+    mini: true
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: goPrev,
     className: "mt-auto flex items-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl justify-center active:scale-95"
   }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
