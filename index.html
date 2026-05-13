@@ -219,6 +219,97 @@ const {
   motion,
   AnimatePresence
 } = Motion;
+
+/* ── 연필요정 ── */
+function PencilFairy({
+  className = "",
+  speech = "",
+  mini = false,
+  isListening = false
+}) {
+  return /*#__PURE__*/React.createElement(motion.div, {
+    className: "relative flex flex-col items-center " + className,
+    animate: {
+      y: isListening ? [0, -8, 0] : [0, -4, 0]
+    },
+    transition: {
+      repeat: Infinity,
+      duration: isListening ? 0.6 : 2.5,
+      ease: "easeInOut"
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: mini ? "70" : "90",
+    height: mini ? "85" : "110",
+    viewBox: "0 0 120 150",
+    fill: "none"
+  }, /*#__PURE__*/React.createElement(motion.path, {
+    d: "M45 55C25 45 15 75 30 85C15 95 20 115 40 105",
+    stroke: isListening ? "#EF4444" : "#A0AEC0",
+    strokeWidth: "4",
+    strokeLinecap: "round",
+    animate: {
+      rotate: isListening ? [-8, 8, -8] : 0
+    }
+  }), /*#__PURE__*/React.createElement(motion.path, {
+    d: "M75 55C95 45 105 75 90 85C105 95 100 115 80 105",
+    stroke: isListening ? "#EF4444" : "#A0AEC0",
+    strokeWidth: "4",
+    strokeLinecap: "round",
+    animate: {
+      rotate: isListening ? [8, -8, 8] : 0
+    }
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M45 30L75 30V110L60 135L45 110V30Z",
+    fill: isListening ? "#F87171" : "#F6AD55",
+    stroke: "#4A5568",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M45 110L60 135L75 110H45Z",
+    fill: "#FBD38D",
+    stroke: "#4A5568",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M54 125L60 135L66 125H54Z",
+    fill: "#2D3748"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M45 15C45 10 75 10 75 15V30H45V15Z",
+    fill: "#FBB6CE",
+    stroke: "#4A5568",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "53",
+    cy: "65",
+    r: "2.5",
+    fill: isListening ? "#EF4444" : "#2D3748"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "67",
+    cy: "65",
+    r: "2.5",
+    fill: isListening ? "#EF4444" : "#2D3748"
+  }), /*#__PURE__*/React.createElement(motion.path, {
+    d: "M56 78C56 78 60 82 64 78",
+    stroke: "#2D3748",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    animate: {
+      scaleY: isListening ? [1, 1.8, 1] : 1
+    }
+  })), speech && /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0,
+      y: 10
+    },
+    animate: {
+      opacity: 1,
+      y: 0
+    },
+    className: "mt-2 bg-white px-5 py-2.5 rounded-3xl shadow-xl border-2 " + (isListening ? "border-red-400 ring-4 ring-red-50" : "border-orange-200") + " relative z-10 whitespace-pre-wrap max-w-[260px]"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-base font-bold leading-tight text-center " + (isListening ? "text-red-500" : "text-slate-800")
+  }, isListening ? "듣고 있어요!" : speech), /*#__PURE__*/React.createElement("div", {
+    className: "absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 " + (isListening ? "border-red-400" : "border-orange-200") + " rotate-45"
+  })));
+}
 const CARD_POOL = [{
   key: 'when',
   label: '언제',
@@ -545,15 +636,26 @@ function App() {
   const [saved, setSaved] = useState(false);
   const [drawn, setDrawn] = useState(null);
   const [flipped, setFlipped] = useState(null);
-  const [cards] = useState(function () {
-    var a = CARD_POOL.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = a[i];
-      a[i] = a[j];
-      a[j] = t;
-    }
-    return a;
+  const [cardGroups] = useState(function () {
+    const groups = {
+      when: [],
+      where: [],
+      who: [],
+      what: []
+    };
+    CARD_POOL.forEach(function (c) {
+      groups[c.key].push(c);
+    });
+    Object.keys(groups).forEach(function (key) {
+      const arr = groups[key];
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i];
+        arr[i] = arr[j];
+        arr[j] = t;
+      }
+    });
+    return groups;
   });
   const recRef = useRef(null);
   const cardRef = useRef(null);
@@ -625,12 +727,12 @@ function App() {
       });
     }
   }
-  function pickCard(idx) {
-    if (flipped !== null) return;
-    setFlipped(idx);
+  function pickCard(card) {
+    if (flipped) return;
+    setFlipped(card);
   }
   function confirmCard() {
-    var c = cards[flipped];
+    var c = flipped;
     setDrawn(c);
     var p = {};
     p[c.key] = c.value;
@@ -978,55 +1080,98 @@ function App() {
     },
     className: "w-full h-full flex flex-col items-center gap-5 overflow-hidden"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-6 shrink-0 w-full"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "text-6xl shrink-0"
-  }, "\uD83C\uDFB4"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {
+    className: "flex items-start gap-5 shrink-0 w-full"
+  }, /*#__PURE__*/React.createElement(PencilFairy, {
+    mini: true,
+    speech: "\uC5B4\uB5A4 \uCE74\uB4DC\uB97C \uBF51\uC744\uAE4C?",
+    className: "shrink-0"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 pt-3"
+  }, /*#__PURE__*/React.createElement("h2", {
     className: "text-4xl font-black text-slate-800"
   }, "\uC624\uB298\uC758 \uC77C\uAE30 \uCE74\uB4DC\uB97C \uBF51\uC544\uBD10\uC694!"), /*#__PURE__*/React.createElement("p", {
     className: "text-xl text-slate-400 font-bold mt-1"
   }, "20\uC7A5 \uC911 \uD55C \uC7A5\uC744 \uB20C\uB7EC\uBD10\uC694. \uC5B4\uB5A4 \uC774\uC57C\uAE30\uAC00 \uB098\uC62C\uAE4C\uC694?"))), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 w-full grid grid-cols-5 gap-3 overflow-hidden px-1"
-  }, cards.map(function (card, idx) {
-    var isF = flipped === idx;
-    var isDim = flipped !== null && !isF;
-    var col = CC[card.color];
-    return /*#__PURE__*/React.createElement(motion.button, {
-      key: idx,
-      onClick: function () {
-        pickCard(idx);
+    className: "flex-1 w-full flex flex-col gap-2 overflow-hidden"
+  }, ['when', 'where', 'who', 'what'].map(function (cat) {
+    var meta = {
+      when: {
+        label: '언제',
+        emoji: '📅'
       },
-      disabled: flipped !== null && !isF,
-      animate: isF ? {
-        scale: 1.06
-      } : isDim ? {
-        scale: 0.9,
-        opacity: 0.25
-      } : {
-        scale: 1,
-        opacity: 1
+      where: {
+        label: '어디서',
+        emoji: '📍'
       },
-      className: "relative rounded-[1.8rem] overflow-hidden shadow-xl border-4 border-transparent hover:border-orange-400 focus:outline-none disabled:pointer-events-none active:scale-95"
-    }, !isF ? /*#__PURE__*/React.createElement("div", {
-      className: "w-full h-full bg-gradient-to-b from-slate-600 to-slate-900 flex items-center justify-center min-h-[7rem]"
+      who: {
+        label: '누구와',
+        emoji: '👥'
+      },
+      what: {
+        label: '무엇을',
+        emoji: '🎯'
+      }
+    }[cat];
+    var colKey = {
+      when: 'amber',
+      where: 'blue',
+      who: 'green',
+      what: 'red'
+    }[cat];
+    var col = CC[colKey];
+    return /*#__PURE__*/React.createElement("div", {
+      key: cat,
+      className: "flex items-stretch gap-3 flex-1 min-h-0"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "w-28 shrink-0 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b " + col.f + " " + col.t + " text-white shadow-md"
     }, /*#__PURE__*/React.createElement("span", {
-      className: "text-4xl"
-    }, "\uD83C\uDF1F")) : /*#__PURE__*/React.createElement(motion.div, {
-      initial: {
-        rotateY: 90
-      },
-      animate: {
-        rotateY: 0
-      },
-      className: "w-full h-full bg-gradient-to-b " + col.f + " " + col.t + " flex flex-col items-center justify-center gap-1 min-h-[7rem] p-2"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "text-[10px] font-black px-2 py-0.5 rounded-full " + col.b
-    }, card.label), /*#__PURE__*/React.createElement("span", {
-      className: "text-4xl"
-    }, card.emoji), /*#__PURE__*/React.createElement("span", {
-      className: "text-base font-black text-white text-center leading-tight"
-    }, card.value)));
-  })), flipped !== null && /*#__PURE__*/React.createElement(motion.div, {
+      className: "text-3xl"
+    }, meta.emoji), /*#__PURE__*/React.createElement("span", {
+      className: "text-xl font-black mt-1"
+    }, meta.label)), /*#__PURE__*/React.createElement("div", {
+      className: "flex-1 grid grid-cols-5 gap-3"
+    }, cardGroups[cat].map(function (card, idx) {
+      var isF = flipped && flipped.value === card.value && flipped.key === card.key;
+      var isDim = flipped && !isF;
+      return /*#__PURE__*/React.createElement(motion.button, {
+        key: cat + idx,
+        onClick: function () {
+          pickCard(card);
+        },
+        disabled: isDim,
+        animate: isF ? {
+          scale: 1.06
+        } : isDim ? {
+          scale: 0.92,
+          opacity: 0.3
+        } : {
+          scale: 1,
+          opacity: 1
+        },
+        className: "relative rounded-[1.5rem] overflow-hidden shadow-lg border-4 border-transparent hover:border-orange-400 focus:outline-none disabled:pointer-events-none active:scale-95"
+      }, !isF ? /*#__PURE__*/React.createElement("div", {
+        className: "w-full h-full bg-gradient-to-b from-slate-600 to-slate-900 flex items-center justify-center relative"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "absolute top-0 left-0 right-0 h-2 bg-gradient-to-r " + col.f + " " + col.t
+      }), /*#__PURE__*/React.createElement("span", {
+        className: "text-3xl"
+      }, "\uD83C\uDF1F")) : /*#__PURE__*/React.createElement(motion.div, {
+        initial: {
+          rotateY: 90
+        },
+        animate: {
+          rotateY: 0
+        },
+        className: "w-full h-full bg-gradient-to-b " + col.f + " " + col.t + " flex flex-col items-center justify-center gap-1 p-2"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-black px-2 py-0.5 rounded-full " + col.b
+      }, card.label), /*#__PURE__*/React.createElement("span", {
+        className: "text-3xl"
+      }, card.emoji), /*#__PURE__*/React.createElement("span", {
+        className: "text-sm font-black text-white text-center leading-tight"
+      }, card.value)));
+    })));
+  })), flipped && /*#__PURE__*/React.createElement(motion.div, {
     initial: {
       opacity: 0,
       y: 20
@@ -1038,7 +1183,9 @@ function App() {
     className: "shrink-0 flex flex-col items-center gap-3 pb-2"
   }, /*#__PURE__*/React.createElement("p", {
     className: "text-3xl font-black text-slate-700"
-  }, cards[flipped].emoji, " ", cards[flipped].value, " \uCE74\uB4DC\uB97C \uBF51\uC558\uC5B4\uC694!"), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "px-4 py-1 rounded-xl text-white bg-gradient-to-r " + CC[flipped.color].f + " " + CC[flipped.color].t + " mr-2"
+  }, flipped.label), flipped.emoji, " ", flipped.value, " \uCE74\uB4DC\uB97C \uBF51\uC558\uC5B4\uC694!"), /*#__PURE__*/React.createElement("button", {
     onClick: confirmCard,
     className: "px-14 py-5 bg-orange-500 text-white rounded-[2.5rem] text-4xl font-black shadow-[0_10px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none"
   }, "\uC774 \uCE74\uB4DC\uB85C \uC77C\uAE30 \uC368\uC694! \u270D\uFE0F"))) : /*#__PURE__*/React.createElement(motion.div, {
@@ -1581,6 +1728,4 @@ function App() {
   }, "\uB124, \uC54C\uACA0\uC5B4\uC694!"))))));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
-</script>
-</body>
-</html>
+</script></body></html>
