@@ -1841,15 +1841,23 @@ function App() {
       for (var i = 0; i < e.results.length; i++) {
         if (e.results[i].isFinal) finalText += e.results[i][0].transcript;else interimText += e.results[i][0].transcript;
       }
-      setInterim(finalText + interimText);
-      /* 최종 결과 발생 시 자동 완료 */
-      if (finalText.trim()) {
-        setTimeout(function () {
-          try {
-            recRef.current.stop();
-          } catch (_e) {}
-          subDone(finalText.trim());
-        }, 500);
+      if (step === 4) {
+        /* 이야기 더하기: extra에 누적, 자동 advance 없음 */
+        setExtra(finalText + interimText);
+      } else if (step === 6) {
+        /* 감정 이유: feelReason에 누적, 자동 advance 없음 */
+        setFeelReason(finalText + interimText);
+      } else {
+        /* 일기 작성 (step 3): interim에 저장, 최종 결과 시 자동 완료 */
+        setInterim(finalText + interimText);
+        if (finalText.trim()) {
+          setTimeout(function () {
+            try {
+              recRef.current.stop();
+            } catch (_e) {}
+            subDone(finalText.trim());
+          }, 500);
+        }
       }
     };
     if (listening) recRef.current.stop();else {
@@ -2436,10 +2444,14 @@ function App() {
       opacity: 1,
       x: 0
     },
-    className: "relative mt-4 bg-white px-6 py-4 rounded-3xl shadow-md border-2 " + (listening ? "border-red-400 ring-4 ring-red-50" : "border-orange-200")
+    className: "relative mt-4 bg-white px-6 py-3 rounded-3xl shadow-md border-2 " + (listening ? "border-red-400 ring-4 ring-red-50" : "border-orange-200")
   }, /*#__PURE__*/React.createElement("p", {
     className: "text-3xl font-bold leading-tight whitespace-nowrap " + (listening ? "text-red-500" : "text-slate-800")
-  }, listening ? "🎙️ 듣고 있어요!" : "스스로 떠올려봐요! " + activeOpts[sub].fairy), /*#__PURE__*/React.createElement("div", {
+  }, listening ? "🎙️ 듣고 있어요!" : "스스로 떠올려봐요! " + activeOpts[sub].fairy), !listening && /*#__PURE__*/React.createElement("p", {
+    className: "text-base font-bold text-slate-500 mt-1 whitespace-nowrap"
+  }, "\uC5B4\uB824\uC6B0\uBA74 ", /*#__PURE__*/React.createElement("span", {
+    className: "text-amber-700 font-black bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200"
+  }, "\uD83D\uDD0D \uD78C\uD2B8 \uBCF4\uAE30"), "\uB97C \uB20C\uB7EC\uBD10!"), /*#__PURE__*/React.createElement("div", {
     className: "absolute top-8 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 " + (listening ? "border-red-400" : "border-orange-200") + " rotate-45"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "flex-1 bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 shadow-xl flex flex-col gap-4 overflow-hidden min-h-0"
@@ -2462,19 +2474,19 @@ function App() {
     placeholder: "\uB5A0\uC624\uB974\uB294 \uB0B4\uC6A9\uC744 \uC790\uC720\uB86D\uAC8C \uC368\uBD10\uC694...",
     className: "flex-1 w-full p-6 bg-yellow-50 border-2 rounded-[1.5rem] text-3xl font-black outline-none resize-none placeholder:text-slate-300 leading-relaxed " + (listening ? "border-red-300 ring-4 ring-red-50" : "border-orange-100")
   }), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2 shrink-0 flex-wrap"
+    className: "flex items-center gap-2 shrink-0"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: toggleListen,
-    className: "flex items-center gap-2 px-6 py-4 rounded-2xl font-black text-xl shadow-md whitespace-nowrap " + (listening ? "bg-red-600 text-white animate-pulse" : "bg-red-500 text-white hover:bg-red-600")
-  }, /*#__PURE__*/React.createElement(IconMic, null), " ", listening ? "녹음 중..." : "녹음"), /*#__PURE__*/React.createElement("button", {
+    className: "flex items-center gap-1.5 px-4 py-3 rounded-2xl font-black text-lg shadow-md whitespace-nowrap " + (listening ? "bg-red-600 text-white animate-pulse" : "bg-red-500 text-white hover:bg-red-600")
+  }, /*#__PURE__*/React.createElement(IconMic, null), " ", listening ? "녹음 중" : "녹음"), /*#__PURE__*/React.createElement("button", {
     onClick: skipSub,
-    className: "flex items-center gap-2 px-6 py-4 bg-slate-100 text-slate-500 border-2 border-slate-200 rounded-2xl font-black text-xl hover:bg-slate-200 active:scale-95 whitespace-nowrap"
+    className: "flex items-center gap-1.5 px-4 py-3 bg-slate-100 text-slate-500 border-2 border-slate-200 rounded-2xl font-black text-lg hover:bg-slate-200 active:scale-95 whitespace-nowrap"
   }, "\uAC74\uB108\uB6F0\uAE30"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       setShowHint(!showHint);
     },
-    className: "flex items-center gap-2 px-6 py-4 rounded-2xl font-black text-xl border-2 active:scale-95 whitespace-nowrap " + (showHint ? "bg-amber-500 text-white border-amber-400 shadow-md" : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100")
-  }, "\uD83D\uDD0D \uD78C\uD2B8 ", showHint ? "닫기" : "보기"), /*#__PURE__*/React.createElement("button", {
+    className: "flex items-center gap-1.5 px-4 py-3 rounded-2xl font-black text-lg border-2 active:scale-95 whitespace-nowrap " + (showHint ? "bg-amber-500 text-white border-amber-400 shadow-md" : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100")
+  }, "\uD83D\uDD0D \uD78C\uD2B8"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       if (interim) {
         subDone(interim);
@@ -2482,7 +2494,7 @@ function App() {
       }
       stopListen();
     },
-    className: "ml-auto flex items-center gap-2 px-10 py-4 rounded-2xl font-black text-xl whitespace-nowrap " + (interim ? "bg-orange-500 text-white shadow-[0_4px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-none" : "bg-orange-200 text-orange-400 cursor-not-allowed")
+    className: "ml-auto flex items-center gap-1.5 px-5 py-3 rounded-2xl font-black text-lg whitespace-nowrap " + (interim ? "bg-orange-500 text-white shadow-[0_4px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-none" : "bg-orange-200 text-orange-400 cursor-not-allowed")
   }, /*#__PURE__*/React.createElement(IconCheck, null), " \uC644\uB8CC")))), /*#__PURE__*/React.createElement(AnimatePresence, null, showHint && /*#__PURE__*/React.createElement(motion.div, {
     initial: {
       opacity: 0,
@@ -2532,37 +2544,58 @@ function App() {
     animate: {
       opacity: 1
     },
-    className: "w-full h-full flex flex-col space-y-4 overflow-hidden py-2"
+    className: "w-full h-full flex flex-col gap-3 overflow-hidden py-2"
   }, DPBar, /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 flex gap-6 overflow-hidden min-h-0"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "w-[18%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-6 border-2 border-orange-50 shadow-lg shrink-0"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "bg-orange-100 px-6 py-1 rounded-full mb-4 shadow-sm border border-orange-200"
-  }, /*#__PURE__*/React.createElement("h3", {
-    className: "text-xl font-black text-orange-600"
-  }, "\uC774\uC57C\uAE30 \uB354\uD558\uAE30")), /*#__PURE__*/React.createElement(PencilFairy, {
-    mini: true
-  }), /*#__PURE__*/React.createElement("button", {
-    onClick: goPrev,
-    className: "mt-auto flex items-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl justify-center active:scale-95"
-  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 flex flex-col bg-emerald-50/50 p-8 rounded-[3.5rem] border-4 border-emerald-100 shadow-xl justify-center"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "text-center text-emerald-600 font-black text-3xl mb-4"
-  }, "\uC774\uC57C\uAE30 \uB354\uD558\uAE30 (\uC120\uD0DD \uC0AC\uD56D)"), /*#__PURE__*/React.createElement("textarea", {
+    className: "flex items-start gap-3 shrink-0"
+  }, /*#__PURE__*/React.createElement(PencilFairy, {
+    mini: true,
+    className: "shrink-0"
+  }), /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0,
+      x: -10
+    },
+    animate: {
+      opacity: 1,
+      x: 0
+    },
+    className: "relative mt-4 bg-white px-6 py-3 rounded-3xl shadow-md border-2 " + (listening ? "border-red-400 ring-4 ring-red-50" : "border-emerald-200")
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-3xl font-bold leading-tight whitespace-nowrap " + (listening ? "text-red-500" : "text-slate-800")
+  }, listening ? "🎙️ 듣고 있어요!" : "더 하고 싶은 이야기가 있어?"), !listening && /*#__PURE__*/React.createElement("p", {
+    className: "text-base font-bold text-slate-500 mt-1 whitespace-nowrap"
+  }, "\uC5C6\uC73C\uBA74 ", /*#__PURE__*/React.createElement("span", {
+    className: "text-slate-700 font-black bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200"
+  }, "\uAC74\uB108\uB6F0\uAE30"), "\uB97C \uB20C\uB7EC\uB3C4 \uB3FC!"), /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-8 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 " + (listening ? "border-red-400" : "border-emerald-200") + " rotate-45"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 shadow-xl gap-4 overflow-hidden min-h-0"
+  }, /*#__PURE__*/React.createElement("textarea", {
     value: extra,
     onChange: function (e) {
       setExtra(e.target.value);
     },
-    placeholder: "\uB354 \uD558\uACE0 \uC2F6\uC740 \uC774\uC57C\uAE30\uB97C \uC801\uAC70\uB098 \uB9D0\uD574\uBD10\uC694! (\uC5C6\uC73C\uBA74 \uB2E4\uC74C\uC73C\uB85C!)",
-    className: "flex-1 p-8 bg-yellow-100 border-2 rounded-[2.5rem] text-3xl font-black outline-none resize-none text-center placeholder:text-slate-300 min-h-[12rem] " + (listening ? "border-red-200" : "border-orange-50")
+    placeholder: "\uB5A0\uC624\uB974\uB294 \uC774\uC57C\uAE30\uB97C \uC790\uC720\uB86D\uAC8C \uC368\uBD10\uC694... (\uC5C6\uC73C\uBA74 \uAC74\uB108\uB6F0\uC5B4\uC694!)",
+    className: "flex-1 w-full p-6 bg-yellow-50 border-2 rounded-[1.5rem] text-3xl font-black outline-none resize-none placeholder:text-slate-300 leading-relaxed " + (listening ? "border-red-300 ring-4 ring-red-50" : "border-emerald-100")
   }), /*#__PURE__*/React.createElement("div", {
-    className: "mt-6 flex justify-center"
+    className: "flex items-center gap-2 shrink-0"
   }, /*#__PURE__*/React.createElement("button", {
-    onClick: goNext,
-    className: "px-16 py-5 bg-orange-500 text-white rounded-[2.5rem] text-4xl font-black shadow-[0_8px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none"
-  }, "\uB2E4\uC74C \uB2E8\uACC4\uB85C"))))), step === 5 && /*#__PURE__*/React.createElement(motion.div, {
+    onClick: toggleListen,
+    className: "flex items-center gap-1.5 px-4 py-3 rounded-2xl font-black text-lg shadow-md whitespace-nowrap " + (listening ? "bg-red-600 text-white animate-pulse" : "bg-red-500 text-white hover:bg-red-600")
+  }, /*#__PURE__*/React.createElement(IconMic, null), " ", listening ? "녹음 중" : "녹음"), /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      stopListen();
+      setExtra("");
+      goNext();
+    },
+    className: "flex items-center gap-1.5 px-4 py-3 bg-slate-100 text-slate-500 border-2 border-slate-200 rounded-2xl font-black text-lg hover:bg-slate-200 active:scale-95 whitespace-nowrap"
+  }, "\uAC74\uB108\uB6F0\uAE30"), /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      stopListen();
+      goNext();
+    },
+    className: "ml-auto flex items-center gap-1.5 px-6 py-3 bg-orange-500 text-white rounded-2xl font-black text-lg shadow-[0_4px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-none whitespace-nowrap"
+  }, /*#__PURE__*/React.createElement(IconCheck, null), " \uB2E4\uC74C \uB2E8\uACC4\uB85C")))), step === 5 && /*#__PURE__*/React.createElement(motion.div, {
     key: "s5",
     initial: {
       opacity: 0
@@ -2570,25 +2603,35 @@ function App() {
     animate: {
       opacity: 1
     },
-    className: "w-full h-full flex gap-6 overflow-hidden py-2"
+    className: "w-full h-full flex flex-col gap-3 overflow-hidden py-2 px-2"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "w-[18%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-6 border-2 border-orange-50 shadow-lg shrink-0"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "bg-orange-100 px-6 py-1 rounded-full mb-4 shadow-sm border border-orange-200"
-  }, /*#__PURE__*/React.createElement("h3", {
-    className: "text-xl font-black text-orange-600"
-  }, "\uB9C8\uC74C \uC2E0\uD638\uB4F1")), /*#__PURE__*/React.createElement("div", {
-    className: "text-6xl mb-4"
-  }, "\uD83D\uDE0A"), /*#__PURE__*/React.createElement("button", {
-    onClick: goPrev,
-    className: "mt-auto flex items-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl justify-center active:scale-95"
-  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 flex flex-col bg-white p-6 rounded-[3.5rem] border-2 border-orange-50 shadow-xl overflow-hidden items-center pt-8"
-  }, /*#__PURE__*/React.createElement("h2", {
-    className: "text-3xl font-black text-slate-800 mb-6"
+    className: "flex items-start gap-3 shrink-0"
+  }, /*#__PURE__*/React.createElement(PencilFairy, {
+    mini: true,
+    className: "shrink-0"
+  }), /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0,
+      x: -10
+    },
+    animate: {
+      opacity: 1,
+      x: 0
+    },
+    className: "relative mt-4 bg-white px-6 py-3 rounded-3xl shadow-md border-2 border-orange-200"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-3xl font-bold leading-tight whitespace-nowrap text-slate-800"
+  }, "\uC9C0\uAE08 \uB9C8\uC74C\uC758 \uC0C9\uAE54\uC740 \uBB34\uC5C7\uC778\uAC00\uC694?"), /*#__PURE__*/React.createElement("p", {
+    className: "text-base font-bold text-slate-500 mt-1 whitespace-nowrap"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "text-orange-500"
-  }, "\uC9C0\uAE08 \uB9C8\uC74C\uC758 \uC0C9\uAE54"), "\uC740 \uBB34\uC5C7\uC778\uAC00\uC694?"), /*#__PURE__*/React.createElement("div", {
+    className: "text-orange-600 font-black bg-orange-100 px-2 py-0.5 rounded-lg border border-orange-200"
+  }, "\uC2E0\uD638\uB4F1"), "\uC744 \uB20C\uB7EC\uBD10! ", /*#__PURE__*/React.createElement("span", {
+    className: "text-blue-600 font-black bg-blue-100 px-2 py-0.5 rounded-lg border border-blue-200"
+  }, "\uC5EC\uB7EC \uAC00\uC9C0 \uAC10\uC815"), "\uC744 \uD568\uAED8 \uC120\uD0DD\uD560 \uC218 \uC788\uC5B4!"), /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-8 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 border-orange-200 rotate-45"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col bg-white p-6 rounded-[3.5rem] border-2 border-orange-50 shadow-xl overflow-hidden items-center"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "bg-slate-800 p-4 px-10 rounded-[6rem] shadow-xl flex flex-row gap-10 border-[12px] border-slate-700 relative mb-6"
   }, /*#__PURE__*/React.createElement("div", {
     className: "absolute top-[-1.2rem] left-1/4 w-4 h-12 bg-slate-700 rounded-full"
@@ -2732,7 +2775,7 @@ function App() {
     },
     className: "px-20 py-4 bg-slate-800 text-white rounded-[2rem] text-3xl font-black shadow-xl active:scale-95"
   }, "\uC120\uD0DD \uC644\uB8CC"))))), /*#__PURE__*/React.createElement("div", {
-    className: "w-full pt-6 border-t border-slate-100 flex justify-center"
+    className: "w-full pt-4 border-t border-slate-100 flex justify-center"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: goNext,
     disabled: feelings.length === 0,
