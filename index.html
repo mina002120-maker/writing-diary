@@ -2055,15 +2055,13 @@ function App() {
       opacity: 1,
       x: 0
     },
-    className: "relative mt-4 bg-white px-5 py-3 rounded-3xl shadow-md border-2 self-start max-w-md " + (listening ? "border-red-400 ring-4 ring-red-50" : "border-orange-200")
+    className: "relative mt-4 bg-white px-6 py-4 rounded-3xl shadow-md border-2 self-start " + (listening ? "border-red-400 ring-4 ring-red-50" : "border-orange-200")
   }, /*#__PURE__*/React.createElement("p", {
-    className: "text-lg font-bold leading-tight whitespace-pre-line " + (listening ? "text-red-500" : "text-slate-800")
-  }, listening ? "🎙️ 듣고 있어요!" : "스스로 떠올려봐요!\n" + activeOpts[sub].fairy), /*#__PURE__*/React.createElement("div", {
-    className: "absolute top-6 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 " + (listening ? "border-red-400" : "border-orange-200") + " rotate-45"
+    className: "text-2xl font-bold leading-tight whitespace-nowrap " + (listening ? "text-red-500" : "text-slate-800")
+  }, listening ? "🎙️ 듣고 있어요!" : "스스로 떠올려봐요! " + activeOpts[sub].fairy), /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-7 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 " + (listening ? "border-red-400" : "border-orange-200") + " rotate-45"
   })), function () {
-    var curKey = activeOpts[sub] && activeOpts[sub].key;
-    var curVal = curKey && parts[curKey];
-    var exKey = curVal || activeOpts[sub] && activeOpts[sub].options[0];
+    var exKey = drawn && drawn.value;
     var exs = exKey && wordExamples[exKey];
     if (!exs || exs.length === 0) return null;
     return /*#__PURE__*/React.createElement(motion.div, {
@@ -2075,14 +2073,14 @@ function App() {
         opacity: 1,
         y: 0
       },
-      className: "bg-amber-50/80 px-5 py-3 rounded-2xl border-2 border-amber-200 shadow-sm"
+      className: "bg-amber-50/80 px-6 py-4 rounded-2xl border-2 border-amber-200 shadow-sm"
     }, /*#__PURE__*/React.createElement("p", {
-      className: "text-sm font-black text-amber-700 mb-2 flex items-center gap-1"
+      className: "text-lg font-black text-amber-700 mb-3 flex items-center gap-1"
     }, "\u2728 ", /*#__PURE__*/React.createElement("span", null, "\"", exKey, "\" \uC774\uB807\uAC8C \uC368\uBD10\uC694!")), exs.map(function (ex, i) {
       var idx = ex.indexOf(exKey);
       return /*#__PURE__*/React.createElement("p", {
         key: i,
-        className: "text-base font-bold text-slate-600 leading-snug break-keep mb-1"
+        className: "text-xl font-bold text-slate-600 leading-relaxed break-keep mb-2"
       }, "\u2022 ", idx >= 0 ? ex.slice(0, idx) : ex, idx >= 0 && /*#__PURE__*/React.createElement("span", {
         className: "text-red-500 font-black"
       }, exKey), idx >= 0 ? ex.slice(idx + exKey.length) : "");
