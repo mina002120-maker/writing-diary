@@ -1509,38 +1509,58 @@ const DIARY_OPTS = [{
   options: optsFor('what')
 }];
 const FEELINGS = [{
-  category: '마음이 아프거나 화가 날 때',
+  category: '마음이 아프거나 힘들 때',
   color: 'red',
   desc: '부정적인 감정 (빨강)',
   items: [{
     label: '속상하다',
     icon: '😢',
-    sentence: '속상하다',
     def: '마음대로 안 풀릴 때',
     eg: '색연필이 부러져서 속상했다.'
   }, {
     label: '서운하다',
     icon: '😔',
-    sentence: '서운하다',
     def: '친구가 안 놀아줄 때',
     eg: '친구가 안 놀아주니 서운했다.'
   }, {
     label: '화나다',
     icon: '😡',
-    sentence: '화나다',
     def: '누가 놀렸을 때',
     eg: '장난감이 망가져서 화났다.'
   }, {
     label: '무섭다',
     icon: '😨',
-    sentence: '무섭다',
     def: '어두운 곳에 갈 때',
     eg: '밤에 화장실이 무서웠다.'
   }, {
+    label: '슬프다',
+    icon: '😭',
+    def: '눈물이 나올 것 같을 때',
+    eg: '강아지가 아파서 슬펐다.'
+  }, {
+    label: '힘들다',
+    icon: '😣',
+    def: '몸이나 마음이 지칠 때',
+    eg: '숙제가 많아서 힘들었다.'
+  }, {
+    label: '외롭다',
+    icon: '🥺',
+    def: '혼자라서 쓸쓸할 때',
+    eg: '친구들이 없어서 외로웠다.'
+  }, {
+    label: '걱정된다',
+    icon: '😟',
+    def: '나쁜 일이 생길까 봐',
+    eg: '발표 시간이 걱정됐다.'
+  }, {
+    label: '부끄럽다',
+    icon: '😳',
+    def: '창피한 마음이 들 때',
+    eg: '실수해서 부끄러웠다.'
+  }, {
     label: '떨리다',
     icon: '💓',
-    sentence: '떨리다',
-    def: '발표할 때',
+    def: '발표하거나 긴장될 때',
     eg: '발표하려니 떨렸다.'
   }]
 }, {
@@ -1550,27 +1570,43 @@ const FEELINGS = [{
   items: [{
     label: '궁금하다',
     icon: '🔍',
-    sentence: '궁금하다',
     def: '알고 싶은 마음',
     eg: '선물이 뭘지 궁금하다.'
   }, {
     label: '쑥스럽다',
     icon: '😊',
-    sentence: '쑥스럽다',
     def: '수줍은 느낌',
     eg: '칭찬을 들으니 쑥스럽다.'
   }, {
     label: '부럽다',
     icon: '✨',
-    sentence: '부럽다',
     def: '남의 것이 좋아 보일 때',
     eg: '새 자전거가 부럽다.'
   }, {
     label: '심심하다',
     icon: '🥱',
-    sentence: '심심하다',
     def: '할 일이 없을 때',
     eg: '비 와서 심심하다.'
+  }, {
+    label: '피곤하다',
+    icon: '😪',
+    def: '쉬고 싶을 때',
+    eg: '운동을 많이 해서 피곤했다.'
+  }, {
+    label: '긴장된다',
+    icon: '😬',
+    def: '마음이 조마조마할 때',
+    eg: '시험 전날 긴장됐다.'
+  }, {
+    label: '어색하다',
+    icon: '😅',
+    def: '낯설고 편하지 않을 때',
+    eg: '새 친구 앞에서 어색했다.'
+  }, {
+    label: '멍하다',
+    icon: '😶',
+    def: '아무 생각이 없을 때',
+    eg: '너무 피곤해서 멍했다.'
   }]
 }, {
   category: '기분이 좋고 행복할 때',
@@ -1579,42 +1615,56 @@ const FEELINGS = [{
   items: [{
     label: '뿌듯하다',
     icon: '⭐',
-    sentence: '뿌듯하다',
     def: '만족스러울 때',
     eg: '퍼즐을 맞춰서 뿌듯하다.'
   }, {
     label: '설레다',
     icon: '💗',
-    sentence: '설레다',
     def: '기대될 때',
     eg: '소풍 갈 생각에 설렌다.'
   }, {
     label: '신나다',
     icon: '🎡',
-    sentence: '신나다',
     def: '즐거울 때',
     eg: '놀이공원에서 신난다.'
   }, {
     label: '기쁘다',
     icon: '🎁',
-    sentence: '기쁘다',
     def: '원하는 게 이루어졌을 때',
     eg: '선물을 받으니 기쁘다.'
   }, {
     label: '재미있다',
     icon: '😄',
-    sentence: '재미있다',
     def: '즐겁고 유쾌할 때',
     eg: '공놀이가 재미있다.'
   }, {
     label: '고맙다',
     icon: '💕',
-    sentence: '고맙다',
     def: '도움 받았을 때',
     eg: '가방을 들어줘서 고맙다.'
+  }, {
+    label: '행복하다',
+    icon: '🥰',
+    def: '마음이 따뜻하고 좋을 때',
+    eg: '가족이랑 있을 때 행복했다.'
+  }, {
+    label: '편안하다',
+    icon: '🌿',
+    def: '마음이 포근할 때',
+    eg: '집에서 쉬니까 편안하다.'
+  }, {
+    label: '즐겁다',
+    icon: '🎉',
+    def: '즐거운 기분이 들 때',
+    eg: '친구들이랑 놀아서 즐거웠다.'
+  }, {
+    label: '사랑스럽다',
+    icon: '💝',
+    def: '누군가가 너무 귀여울 때',
+    eg: '강아지가 사랑스러웠다.'
   }]
 }];
-const GAS_URL = "https://script.google.com/macros/s/여기에_본인의_GAS_배포_URL을_붙여넣으세요/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyVUI6T0nBlg5F3_SL7EmGZ-MB15WIw74YcXj-j0YF6rWqn98_j3RXnczOjCjWuV0A3qQ/exec";
 const isGasOk = GAS_URL.indexOf("script.google.com") !== -1 && GAS_URL.indexOf("여기에") === -1;
 const DUMMY = [{
   id: 1,
@@ -1834,7 +1884,7 @@ function App() {
       };
       recRef.current = r;
     }
-    /* onresult 매번 재할당 - 최신 closure 사용 (자동 완료용) */
+    /* onresult 매번 재할당 - 최신 closure 사용 */
     recRef.current.onresult = function (e) {
       var finalText = "";
       var interimText = "";
@@ -1842,22 +1892,12 @@ function App() {
         if (e.results[i].isFinal) finalText += e.results[i][0].transcript;else interimText += e.results[i][0].transcript;
       }
       if (step === 4) {
-        /* 이야기 더하기: extra에 누적, 자동 advance 없음 */
         setExtra(finalText + interimText);
       } else if (step === 6) {
-        /* 감정 이유: feelReason에 누적, 자동 advance 없음 */
         setFeelReason(finalText + interimText);
       } else {
-        /* 일기 작성 (step 3): interim에 저장, 최종 결과 시 자동 완료 */
+        /* step 3: interim에 저장, 학생이 완료 버튼을 눌러야 다음 단계로 */
         setInterim(finalText + interimText);
-        if (finalText.trim()) {
-          setTimeout(function () {
-            try {
-              recRef.current.stop();
-            } catch (_e) {}
-            subDone(finalText.trim());
-          }, 500);
-        }
       }
     };
     if (listening) recRef.current.stop();else {
@@ -2749,22 +2789,17 @@ function App() {
         scale: 0.95
       },
       onClick: function () {
-        isSel ? setFeelings(feelings.filter(function (sf) {
-          return sf.label !== f.label;
-        })) : setFeelings(feelings.concat([f]));
+        setTooltip({
+          ...f,
+          fromModal: true
+        });
       },
-      className: "relative flex flex-col items-center justify-center p-4 rounded-[2rem] border-2 cursor-pointer " + (isSel ? "bg-orange-50 border-orange-400 shadow-lg" : "border-slate-100 bg-white shadow-sm")
+      className: "relative flex flex-col items-center justify-center p-4 rounded-[2rem] border-2 cursor-pointer " + (isSel ? "bg-orange-50 border-orange-400 shadow-lg" : "border-slate-100 bg-white shadow-sm hover:border-orange-200")
     }, /*#__PURE__*/React.createElement("div", {
       className: "text-6xl mb-2"
     }, f.icon), /*#__PURE__*/React.createElement("div", {
       className: "text-xl font-black text-center " + (isSel ? "text-orange-600" : "text-slate-600")
-    }, f.label), /*#__PURE__*/React.createElement("button", {
-      className: "absolute -top-2 -right-2 w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center text-xl font-black border-2 border-white shadow-lg",
-      onClick: function (e) {
-        e.stopPropagation();
-        setTooltip(f);
-      }
-    }, "?"), isSel && /*#__PURE__*/React.createElement("div", {
+    }, f.label), isSel && /*#__PURE__*/React.createElement("div", {
       className: "absolute top-2 left-2 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-lg font-black border border-white shadow-md"
     }, "\u2713"));
   })), /*#__PURE__*/React.createElement("div", {
@@ -2827,10 +2862,23 @@ function App() {
     placeholder: "\uC5B4\uB5A4 \uC77C\uC774 \uC788\uC5B4\uC11C \uADF8\uB7F0 \uAE30\uBD84\uC774 \uB4E4\uC5C8\uB098\uC694?",
     className: "flex-1 p-10 bg-yellow-100 border-4 rounded-[3rem] text-4xl font-black outline-none resize-none placeholder:text-slate-300 leading-relaxed min-h-[12rem] " + (listening ? "border-red-200" : "border-orange-100")
   }), /*#__PURE__*/React.createElement("div", {
-    className: "mt-6 shrink-0"
+    className: "mt-6 shrink-0 flex items-center gap-3"
   }, /*#__PURE__*/React.createElement("button", {
-    onClick: goNext,
-    className: "w-full py-7 bg-orange-500 text-white rounded-[2.5rem] text-5xl font-black shadow-[0_12px_0_rgb(154,52,18)] active:translate-y-3 active:shadow-none flex items-center justify-center gap-4"
+    onClick: toggleListen,
+    className: "flex items-center gap-1.5 px-5 py-4 rounded-2xl font-black text-xl shadow-md whitespace-nowrap " + (listening ? "bg-red-600 text-white animate-pulse" : "bg-red-500 text-white hover:bg-red-600")
+  }, /*#__PURE__*/React.createElement(IconMic, null), " ", listening ? "녹음 중" : "녹음"), /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      stopListen();
+      setFeelReason("");
+      goNext();
+    },
+    className: "flex items-center gap-1.5 px-5 py-4 bg-slate-100 text-slate-500 border-2 border-slate-200 rounded-2xl font-black text-xl hover:bg-slate-200 active:scale-95 whitespace-nowrap"
+  }, "\uAC74\uB108\uB6F0\uAE30"), /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      stopListen();
+      goNext();
+    },
+    className: "flex-1 py-4 bg-orange-500 text-white rounded-2xl text-2xl font-black shadow-[0_6px_0_rgb(154,52,18)] active:translate-y-1 active:shadow-none flex items-center justify-center gap-3"
   }, "\uC77C\uAE30 \uC644\uC131\uD558\uAE30! \u2192"))))), step === 7 && /*#__PURE__*/React.createElement(motion.div, {
     key: "s7",
     initial: {
@@ -2974,7 +3022,27 @@ function App() {
     className: "text-blue-500 font-bold text-xl mb-2"
   }, "\uC774\uB7F4 \uB54C \uC368\uC694!"), /*#__PURE__*/React.createElement("p", {
     className: "text-2xl font-bold italic text-slate-600 bg-white p-5 rounded-2xl border border-blue-50"
-  }, "\"", tooltip.eg, "\"")), /*#__PURE__*/React.createElement("button", {
+  }, "\"", tooltip.eg, "\"")), tooltip.fromModal && function () {
+    var isSel = feelings.some(function (sf) {
+      return sf.label === tooltip.label;
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      className: "flex gap-3 mt-2"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: function () {
+        setTooltip(null);
+      },
+      className: "flex-1 py-4 bg-slate-100 text-slate-600 rounded-[2.5rem] font-black text-2xl border-2 border-slate-200 active:scale-95"
+    }, "\uB2E4\uC2DC \uACE0\uB97C\uAC8C\uC694"), /*#__PURE__*/React.createElement("button", {
+      onClick: function () {
+        if (isSel) setFeelings(feelings.filter(function (sf) {
+          return sf.label !== tooltip.label;
+        }));else setFeelings(feelings.concat([tooltip]));
+        setTooltip(null);
+      },
+      className: "flex-1 py-4 rounded-[2.5rem] font-black text-2xl shadow-xl active:scale-95 " + (isSel ? "bg-red-500 text-white" : "bg-orange-500 text-white")
+    }, isSel ? "선택 취소 ✗" : "이 감정 선택하기! ✓"));
+  }(), !tooltip.fromModal && /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       setTooltip(null);
     },
