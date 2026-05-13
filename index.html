@@ -1319,6 +1319,130 @@ const WORD_EXAMPLES_TABLE = {
 };
 
 /* 예시 문장을 언제/어디에서/누구와/무엇을 4부분으로 자동 분리 */
+/* 문맥 맵: S=학교, H=집/가정, O=야외/외출 (미지정=어디서나 표시) */
+const CARD_CONTEXTS = {
+  '학교 가는 길에': 'S',
+  '학교 끝나고': 'S',
+  '점심 시간에': 'S',
+  '쉬는 시간에': 'S',
+  '체육 시간에': 'S',
+  '음악 시간에': 'S',
+  '미술 시간에': 'S',
+  '학교 도착해서': 'S',
+  '친구를 만나서': 'S',
+  '오늘 아침에': 'H',
+  '오늘 점심에': 'H',
+  '오늘 저녁에': 'H',
+  '어제 아침에': 'H',
+  '어제 점심에': 'H',
+  '어제 저녁에': 'H',
+  '어제 밤에': 'H',
+  '잠들기 전에': 'H',
+  '집에 와서': 'H',
+  '새벽에 일찍': 'H',
+  '비 오는 날에': 'H',
+  '책 읽다가': 'H',
+  '주말 아침에': 'O',
+  '주말 오후에': 'O',
+  '토요일에': 'O',
+  '일요일에': 'O',
+  '방학 때': 'O',
+  '햇볕 좋은 날': 'O',
+  '바람 부는 날': 'O',
+  '눈 오는 날에': 'O',
+  '운동하다가': 'O',
+  '교실에서': 'S',
+  '운동장에서': 'S',
+  '강당에서': 'S',
+  '도서관에서': 'S',
+  '미술실에서': 'S',
+  '음악실에서': 'S',
+  '과학실에서': 'S',
+  '급식실에서': 'S',
+  '보건실에서': 'S',
+  '학교 화단에서': 'S',
+  '학교 복도에서': 'S',
+  '학원에서': 'S',
+  '집에서': 'H',
+  '거실에서': 'H',
+  '내 방에서': 'H',
+  '부엌에서': 'H',
+  '마당에서': 'H',
+  '베란다에서': 'H',
+  '놀이터에서': 'O',
+  '공원에서': 'O',
+  '산에서': 'O',
+  '바다에서': 'O',
+  '강가에서': 'O',
+  '시장에서': 'O',
+  '마트에서': 'O',
+  '식당에서': 'O',
+  '카페에서': 'O',
+  '박물관에서': 'O',
+  '동물원에서': 'O',
+  '놀이공원에서': 'O',
+  '선생님이랑': 'S',
+  '짝꿍이랑': 'S',
+  '같은 반 친구랑': 'S',
+  '옆 반 친구랑': 'S',
+  '새 친구랑': 'S',
+  '학원 친구랑': 'S',
+  '우리 모두': 'S',
+  '친한 친구랑': 'S',
+  '엄마랑': 'H',
+  '아빠랑': 'H',
+  '형이랑': 'H',
+  '언니랑': 'H',
+  '누나랑': 'H',
+  '오빠랑': 'H',
+  '동생이랑': 'H',
+  '강아지랑': 'H',
+  '고양이랑': 'H',
+  '햄스터랑': 'H',
+  '토끼랑': 'H',
+  '인형이랑': 'H',
+  '나 혼자': 'H',
+  '할머니랑': 'O',
+  '할아버지랑': 'O',
+  '이모랑': 'O',
+  '삼촌이랑': 'O',
+  '사촌이랑': 'O',
+  '동네 친구랑': 'O',
+  '그림을 그렸다': 'S',
+  '글씨를 썼다': 'S',
+  '노래를 불렀다': 'S',
+  '술래잡기 했다': 'S',
+  '청소를 했다': 'S',
+  '친구를 도와줬다': 'S',
+  '칭찬을 받았다': 'S',
+  '새로운 걸 배웠다': 'S',
+  '약속을 지켰다': 'S',
+  '친구와 놀았다': 'S',
+  '달리기를 했다': 'S',
+  '줄넘기를 했다': 'S',
+  '영화를 봤다': 'H',
+  '만화를 봤다': 'H',
+  '게임을 했다': 'H',
+  '블록놀이 했다': 'H',
+  '소꿉놀이 했다': 'H',
+  '정리를 했다': 'H',
+  '심부름을 했다': 'H',
+  '동생과 놀았다': 'H',
+  '자전거를 탔다': 'O',
+  '산책을 했다': 'O',
+  '춤을 췄다': 'O'
+  /* 미지정(universal): 가족이랑, 친구랑, 혼자서, 신나게 놀았다, 맛있게 먹었다,
+     공부를 했다, 책을 읽었다, 깔깔 웃었다, 만들기를 했다, 보드게임 했다 */
+};
+function getContextHints(drawnValue, opts) {
+  var ctx = CARD_CONTEXTS[drawnValue];
+  if (!ctx) return opts;
+  var filtered = opts.filter(function (o) {
+    var oc = CARD_CONTEXTS[o];
+    return !oc || oc === ctx;
+  });
+  return filtered.length >= 4 ? filtered : opts;
+}
 function parseToParts(sentence, drawnKey, drawnValue) {
   var parts = {
     when: '',
@@ -1887,7 +2011,9 @@ function App() {
   var DPKeys = ['when', 'where', 'who', 'what'];
   var dpExs = step === 3 && drawn && WORD_EXAMPLES_TABLE[drawn.value] || null;
   var DPBar = /*#__PURE__*/React.createElement("div", {
-    className: "bg-orange-100 py-3 px-10 rounded-[2.5rem] shadow-xl border-2 border-orange-200 flex flex-col items-center gap-2 shrink-0"
+    className: "w-full flex flex-col shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-orange-100 px-10 shadow-xl border-2 border-orange-200 flex flex-col items-center gap-2 " + (dpExs ? "rounded-t-[2.5rem] pt-3 pb-3" : "rounded-[2.5rem] py-3")
   }, /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-4 w-full gap-4 border-b border-orange-200/50 pb-1"
   }, DPItems.map(function (item) {
@@ -1914,29 +2040,29 @@ function App() {
     }, item.v) : /*#__PURE__*/React.createElement("span", {
       className: "text-orange-200"
     }, "..."));
-  })), dpExs && /*#__PURE__*/React.createElement("div", {
-    className: "w-full mt-2 -mx-10 -mb-3 px-6 py-3 bg-white rounded-b-[2.3rem] border-t-2 border-dashed border-orange-300"
+  }))), dpExs && /*#__PURE__*/React.createElement("div", {
+    className: "bg-white px-8 py-4 rounded-b-[2.5rem] border-2 border-t-0 border-orange-200 shadow-xl"
   }, /*#__PURE__*/React.createElement("p", {
-    className: "text-sm font-black text-orange-700 text-left mb-2"
+    className: "text-lg font-black text-orange-700 text-left mb-3"
   }, "\u2728 \"", /*#__PURE__*/React.createElement("span", {
     className: "text-red-500"
   }, drawn.value), "\" \uC774\uB807\uAC8C \uC368\uBD10\uC694!"), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-3 items-stretch"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "bg-amber-100 rounded-xl px-3 flex items-center justify-center shrink-0 border-2 border-amber-300"
+    className: "bg-amber-100 rounded-xl px-4 flex items-center justify-center shrink-0 border-2 border-amber-300"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "text-orange-700 font-black text-base"
+    className: "text-orange-700 font-black text-lg"
   }, "\uC608\uC2DC")), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 flex flex-col"
+    className: "flex-1 flex flex-col gap-1"
   }, dpExs.map(function (ex, i) {
     return /*#__PURE__*/React.createElement("div", {
       key: i,
-      className: "grid grid-cols-4 w-full gap-4 py-1"
+      className: "grid grid-cols-4 w-full gap-4 py-1.5"
     }, ex.map(function (val, j) {
       var isDrawn = drawn.key === DPKeys[j];
       return /*#__PURE__*/React.createElement("div", {
         key: j,
-        className: "text-center text-base font-bold break-keep leading-tight " + (isDrawn ? "text-red-500 font-black" : "text-slate-600")
+        className: "text-center text-xl font-bold break-keep leading-snug " + (isDrawn ? "text-red-500 font-black" : "text-slate-700")
       }, val);
     }));
   })))));
@@ -2386,7 +2512,7 @@ function App() {
     className: "text-3xl text-slate-300 hover:text-slate-500 font-black shrink-0"
   }, "\xD7")), /*#__PURE__*/React.createElement("div", {
     className: "flex-1 overflow-y-auto custom-scrollbar grid grid-cols-3 gap-3 auto-rows-max"
-  }, activeOpts[sub].options.map(function (opt) {
+  }, getContextHints(drawn && drawn.value, activeOpts[sub].options).map(function (opt) {
     return /*#__PURE__*/React.createElement("button", {
       key: opt,
       onClick: function () {
