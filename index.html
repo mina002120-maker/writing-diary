@@ -1080,19 +1080,20 @@ function App() {
     },
     className: "w-full h-full flex flex-col items-center gap-5 overflow-hidden"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-start gap-5 shrink-0 w-full"
+    className: "flex items-start gap-4 shrink-0 w-full"
   }, /*#__PURE__*/React.createElement(PencilFairy, {
     mini: true,
-    speech: "\uC5B4\uB5A4 \uCE74\uB4DC\uB97C \uBF51\uC744\uAE4C?",
     className: "shrink-0"
   }), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 pt-3"
+    className: "relative bg-white px-7 py-4 rounded-3xl shadow-xl border-2 border-orange-200 mt-6"
   }, /*#__PURE__*/React.createElement("h2", {
-    className: "text-4xl font-black text-slate-800"
+    className: "text-3xl font-black text-slate-800 leading-tight"
   }, "\uC624\uB298\uC758 \uC77C\uAE30 \uCE74\uB4DC\uB97C \uBF51\uC544\uBD10\uC694!"), /*#__PURE__*/React.createElement("p", {
-    className: "text-xl text-slate-400 font-bold mt-1"
-  }, "20\uC7A5 \uC911 \uD55C \uC7A5\uC744 \uB20C\uB7EC\uBD10\uC694. \uC5B4\uB5A4 \uC774\uC57C\uAE30\uAC00 \uB098\uC62C\uAE4C\uC694?"))), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 w-full flex flex-col gap-2 overflow-hidden"
+    className: "text-base text-slate-400 font-bold mt-1"
+  }, "20\uC7A5 \uC911 \uD55C \uC7A5\uC744 \uB20C\uB7EC\uBD10\uC694. \uC5B4\uB5A4 \uC774\uC57C\uAE30\uAC00 \uB098\uC62C\uAE4C\uC694?"), /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-8 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 border-orange-200 rotate-45"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 w-full flex gap-3 overflow-hidden"
   }, ['when', 'where', 'who', 'what'].map(function (cat) {
     var meta = {
       when: {
@@ -1121,74 +1122,106 @@ function App() {
     var col = CC[colKey];
     return /*#__PURE__*/React.createElement("div", {
       key: cat,
-      className: "flex items-stretch gap-3 flex-1 min-h-0"
+      className: "flex-1 flex flex-col gap-2 min-w-0"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "w-28 shrink-0 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b " + col.f + " " + col.t + " text-white shadow-md"
+      className: "shrink-0 py-3 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-b " + col.f + " " + col.t + " text-white shadow-md"
     }, /*#__PURE__*/React.createElement("span", {
-      className: "text-3xl"
+      className: "text-2xl"
     }, meta.emoji), /*#__PURE__*/React.createElement("span", {
-      className: "text-xl font-black mt-1"
+      className: "text-xl font-black"
     }, meta.label)), /*#__PURE__*/React.createElement("div", {
-      className: "flex-1 grid grid-cols-5 gap-3"
+      className: "flex-1 flex flex-col gap-2 min-h-0"
     }, cardGroups[cat].map(function (card, idx) {
-      var isF = flipped && flipped.value === card.value && flipped.key === card.key;
-      var isDim = flipped && !isF;
       return /*#__PURE__*/React.createElement(motion.button, {
         key: cat + idx,
         onClick: function () {
           pickCard(card);
         },
-        disabled: isDim,
-        animate: isF ? {
-          scale: 1.06
-        } : isDim ? {
-          scale: 0.92,
-          opacity: 0.3
-        } : {
-          scale: 1,
-          opacity: 1
+        whileHover: {
+          scale: 1.04
         },
-        className: "relative rounded-[1.5rem] overflow-hidden shadow-lg border-4 border-transparent hover:border-orange-400 focus:outline-none disabled:pointer-events-none active:scale-95"
-      }, !isF ? /*#__PURE__*/React.createElement("div", {
+        whileTap: {
+          scale: 0.96
+        },
+        className: "relative rounded-[1.3rem] overflow-hidden shadow-md border-4 border-transparent hover:border-orange-400 focus:outline-none flex-1 min-h-0"
+      }, /*#__PURE__*/React.createElement("div", {
         className: "w-full h-full bg-gradient-to-b from-slate-600 to-slate-900 flex items-center justify-center relative"
       }, /*#__PURE__*/React.createElement("div", {
         className: "absolute top-0 left-0 right-0 h-2 bg-gradient-to-r " + col.f + " " + col.t
       }), /*#__PURE__*/React.createElement("span", {
         className: "text-3xl"
-      }, "\uD83C\uDF1F")) : /*#__PURE__*/React.createElement(motion.div, {
-        initial: {
-          rotateY: 90
-        },
-        animate: {
-          rotateY: 0
-        },
-        className: "w-full h-full bg-gradient-to-b " + col.f + " " + col.t + " flex flex-col items-center justify-center gap-1 p-2"
-      }, /*#__PURE__*/React.createElement("span", {
-        className: "text-[10px] font-black px-2 py-0.5 rounded-full " + col.b
-      }, card.label), /*#__PURE__*/React.createElement("span", {
-        className: "text-3xl"
-      }, card.emoji), /*#__PURE__*/React.createElement("span", {
-        className: "text-sm font-black text-white text-center leading-tight"
-      }, card.value)));
+      }, "\uD83C\uDF1F")));
     })));
-  })), flipped && /*#__PURE__*/React.createElement(motion.div, {
+  })), /*#__PURE__*/React.createElement(AnimatePresence, null, flipped && /*#__PURE__*/React.createElement(motion.div, {
     initial: {
-      opacity: 0,
-      y: 20
+      opacity: 0
     },
     animate: {
-      opacity: 1,
-      y: 0
+      opacity: 1
     },
-    className: "shrink-0 flex flex-col items-center gap-3 pb-2"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "text-3xl font-black text-slate-700"
+    exit: {
+      opacity: 0
+    },
+    className: "fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-6",
+    onClick: function () {
+      setFlipped(null);
+    }
+  }, /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      scale: 0.5,
+      opacity: 0
+    },
+    animate: {
+      scale: 1,
+      opacity: 1
+    },
+    exit: {
+      scale: 0.5,
+      opacity: 0
+    },
+    transition: {
+      type: "spring",
+      duration: 0.5
+    },
+    className: "bg-white rounded-[4rem] shadow-2xl p-12 border-[8px] border-orange-300 flex flex-col items-center gap-6 max-w-2xl relative",
+    onClick: function (e) {
+      e.stopPropagation();
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-0 left-0 w-full h-6 bg-gradient-to-r from-orange-400 to-orange-500 rounded-t-[3rem]"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-2xl font-black text-orange-500 mt-2"
+  }, "\uD83C\uDF89 \uCE74\uB4DC\uB97C \uBF51\uC558\uC5B4\uC694!"), /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      rotateY: 90,
+      scale: 0.5
+    },
+    animate: {
+      rotateY: 0,
+      scale: 1
+    },
+    transition: {
+      delay: 0.2,
+      duration: 0.6
+    },
+    className: "w-72 h-80 bg-gradient-to-b " + CC[flipped.color].f + " " + CC[flipped.color].t + " rounded-[2.5rem] flex flex-col items-center justify-center gap-4 shadow-2xl p-6 border-[6px] border-white/40"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "px-4 py-1 rounded-xl text-white bg-gradient-to-r " + CC[flipped.color].f + " " + CC[flipped.color].t + " mr-2"
-  }, flipped.label), flipped.emoji, " ", flipped.value, " \uCE74\uB4DC\uB97C \uBF51\uC558\uC5B4\uC694!"), /*#__PURE__*/React.createElement("button", {
+    className: "text-xl font-black px-5 py-1.5 rounded-full " + CC[flipped.color].b
+  }, flipped.label), /*#__PURE__*/React.createElement("span", {
+    className: "text-8xl"
+  }, flipped.emoji), /*#__PURE__*/React.createElement("span", {
+    className: "text-3xl font-black text-white text-center leading-tight"
+  }, flipped.value)), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-4 w-full pt-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      setFlipped(null);
+    },
+    className: "flex-1 py-5 bg-slate-100 text-slate-600 border-2 border-slate-200 rounded-[2rem] text-2xl font-black hover:bg-slate-200 active:scale-95"
+  }, "\uB2E4\uC2DC \uBF51\uAE30"), /*#__PURE__*/React.createElement("button", {
     onClick: confirmCard,
-    className: "px-14 py-5 bg-orange-500 text-white rounded-[2.5rem] text-4xl font-black shadow-[0_10px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none"
-  }, "\uC774 \uCE74\uB4DC\uB85C \uC77C\uAE30 \uC368\uC694! \u270D\uFE0F"))) : /*#__PURE__*/React.createElement(motion.div, {
+    className: "flex-[2] py-5 bg-orange-500 text-white rounded-[2rem] text-2xl font-black shadow-[0_8px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-[0_4px_0_rgb(154,52,18)] transition-all"
+  }, "\uC774 \uCE74\uB4DC\uB85C \uC77C\uAE30 \uC368\uC694! \u270D\uFE0F")))))) : /*#__PURE__*/React.createElement(motion.div, {
     key: "s3b" + sub,
     initial: {
       opacity: 0,
