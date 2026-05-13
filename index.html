@@ -1,1593 +1,2378 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>문장부호 스티커북 | 즐거운 국어 시간</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700&display=swap');
-    .loading-dots:after { content: ' .'; animation: dots 1.5s steps(5,end) infinite; }
-    @keyframes dots {
-      20% { content: ' .'; } 40% { content: ' ..'; } 60% { content: ' ...'; } 80% { content: ' ....'; }
-    }
-    @font-face {
-      font-family: 'Hamchorom';
-      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2104@1.0/HANBatang.woff') format('woff');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Hamchorom';
-      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2104@1.0/HANBatangB.woff') format('woff');
-      font-weight: 700; font-style: normal; font-display: swap;
-    }
-    /* 따옴표·문장부호 전용 — 시스템 내장 명조체 사용 (외부 로드 불필요) */
-    @font-face {
-      font-family: 'SerifPunct';
-      src: local('Georgia'), local('Times New Roman'), local('Batang'), local('NanumMyeongjo'), local('Noto Serif KR');
-      font-weight: normal; font-display: swap;
-      unicode-range: U+002E, U+002C, U+003F, U+0021, U+0022, U+0027, U+201C, U+201D, U+2018, U+2019;
-    }
-    @font-face {
-      font-family: 'SerifPunct';
-      src: local('Georgia'), local('Times New Roman'), local('Batang'), local('NanumMyeongjo'), local('Noto Serif KR');
-      font-weight: 700; font-display: swap;
-      unicode-range: U+002E, U+002C, U+003F, U+0021, U+0022, U+0027, U+201C, U+201D, U+2018, U+2019;
-    }
-    body {
-      font-family: 'SerifPunct', 'Jua', sans-serif;
-      background-color: #FDF8F3;
-      margin: 0; padding: 0; color: #2D346E;
-      width: 100vw; height: 100vh; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-    }
-    /* 모든 요소가 SerifPunct를 폰트 스택에 포함하도록 강제 →
-       unicode-range로 정의된 따옴표·문장부호 글리프가 어디서나 명조체로 표시됨 */
-    *, *::before, *::after {
-      font-family: 'SerifPunct', 'Jua', sans-serif;
-    }
-    #canvas-wrapper {
-      width: 1280px; height: 800px;
-      position: relative;
-      transform-origin: center center;
-      background-color: #FDF8F3;
-      background-image: radial-gradient(#FFEDD5 1.5px, transparent 1.5px);
-      background-size: 30px 30px;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    #root { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-    .sticker-card {
-      background: white; border-radius: 40px;
-      box-shadow: 0 10px 0 #F1F5F9, 0 20px 40px rgba(0,0,0,0.05);
-      border: 6px solid #FFFFFF; position: relative;
-    }
-    .btn-cute {
-      border-radius: 30px;
-      transition: all 0.2s cubic-bezier(0.175,0.885,0.32,1.275);
-      box-shadow: 0 10px 0 #E66000; border: 3px solid #FFFFFF;
-    }
-    .btn-cute:active { transform: translateY(6px); box-shadow: 0 4px 0 #E66000; }
-    .btn-orange { background-color: #FF6B00; color: white; }
-    .btn-orange:hover { background-color: #FF8533; }
-    .btn-pink { background-color: #FF87B2; color: white; box-shadow: 0 10px 0 #D64F81; }
-    .btn-pink:active { box-shadow: 0 4px 0 #D64F81; }
-    .sparkle-icon { animation: sparkle 2s infinite; }
-    @keyframes sparkle {
-      0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.2); }
-    }
-    .drop-zone {
-      border: 5px dashed #E2E8F0; border-radius: 25px;
-      min-width: 80px; min-height: 80px;
-      display: inline-flex; align-items: center; justify-content: center;
-      background: #F8FAFC; transition: all 0.3s; vertical-align: top;
-    }
-    .drop-zone-filled {
-      background: #FFF7ED; border-color: #FFD43B; color: #FF6B00;
-      border-style: solid; box-shadow: 0 0 15px rgba(255,212,59,0.3);
-    }
-    .punctuation-mark {
-      font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-      font-weight: bold;
-      display: inline-block; vertical-align: baseline; transform: translateY(-0.05em);
-    }
-    /* 따옴표 전용 — !important + 높은 선택자 우선순위로 모든 상속 우회 */
-    span.punctuation-mark.quote-serif {
-      font-family: Georgia, 'Times New Roman', Batang, 'Noto Serif KR', 'Nanum Myeongjo', serif !important;
-      font-weight: bold !important;
-    }
-    .sticker-slot { border: 3px dashed #CBD5E1; border-radius: 40px; transition: all 0.3s; background: #FFFFFF; }
-    .sticker-collected { background: #FFFBEB; border: 5px solid #FEF3C7; transform: rotate(2deg); }
-    .text-underline { background: linear-gradient(to top, #FFEBB7 35%, transparent 35%); padding: 0 6px; border-radius: 4px; }
-    .badge-capsule {
-      border: 2px solid #FFEDD5; background: white; color: #FF6B00;
-      padding: 3px 16px; border-radius: 9999px; font-size: 1.25rem; font-weight: bold;
-    }
-    .example-bubble {
-      background: #F8FAFC; border: 3px solid #F1F5F9; border-radius: 25px;
-      position: relative; padding: 15px 25px; color: #2D346E; font-size: 2rem;
-      margin-bottom: 12px; box-shadow: 0 4px 0 #F1F5F9;
-      font-family: 'SerifPunct', 'Jua', sans-serif;
-    }
-    .punctuation-mark.target-highlight { color: #EF4444 !important; }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한 문장 일기장</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Gowun Dodum','sans-serif']}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/framer-motion@10.12.16/dist/framer-motion.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+.custom-scrollbar::-webkit-scrollbar{display:none}
+.custom-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+body{font-family:'Gowun Dodum',sans-serif;height:100vh;width:100vw;overflow:hidden;margin:0;background:#F0F7FF}
+@keyframes pulse{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
+.animate-pulse{animation:pulse 1.5s infinite}
+</style>
 </head>
 <body>
-<div id="canvas-wrapper">
-  <div id="root"></div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/framer-motion@10.16.4/dist/framer-motion.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<div id="root"></div>
 <script>
-window.onload = function() {
-// ── 따옴표 명조체 강제 적용: Tailwind보다 늦게 추가해 항상 최우선 ──
-(function() {
-  var s = document.createElement('style');
-  s.textContent =
-    'span.quote-serif,' +
-    'span.punctuation-mark.quote-serif {' +
-    '  font-family: Georgia, "Times New Roman", Batang, "Noto Serif KR", serif !important;' +
-    '  font-weight: bold !important;' +
-    '}';
-  document.head.appendChild(s);
-})();
-const e = React.createElement;
-const { useState, useEffect, useMemo } = React;
-const mGlobal = window.Motion ? window.Motion : (window.FramerMotion ? window.FramerMotion : null);
-const motion = (mGlobal && mGlobal.motion) ? mGlobal.motion : null;
+/* ── 아이콘 ── */
+const IconDownload = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("path", {
+  d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+}), React.createElement("polyline", {
+  points: "7 10 12 15 17 10"
+}), React.createElement("line", {
+  x1: "12",
+  x2: "12",
+  y1: "15",
+  y2: "3"
+}));
+const IconRotateCcw = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("path", {
+  d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+}), React.createElement("path", {
+  d: "M3 3v5h5"
+}));
+const IconMic = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("path", {
+  d: "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"
+}), React.createElement("path", {
+  d: "M19 10v2a7 7 0 0 1-14 0v-2"
+}), React.createElement("line", {
+  x1: "12",
+  x2: "12",
+  y1: "19",
+  y2: "22"
+}));
+const IconVolume2 = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("polygon", {
+  points: "11 5 6 9 2 9 2 15 6 15 11 19 11 5"
+}), React.createElement("path", {
+  d: "M15.54 8.46a5 5 0 0 1 0 7.07"
+}));
+const IconCheck = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("path", {
+  d: "M22 11.08V12a10 10 0 1 1-5.93-9.14"
+}), React.createElement("polyline", {
+  points: "22 4 12 14.01 9 11.01"
+}));
+const IconChevDown = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("polyline", {
+  points: "6 9 12 15 18 9"
+}));
+const IconUserCircle = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("circle", {
+  cx: "12",
+  cy: "12",
+  r: "10"
+}), React.createElement("circle", {
+  cx: "12",
+  cy: "10",
+  r: "3"
+}), React.createElement("path", {
+  d: "M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"
+}));
+const IconPause = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("rect", {
+  x: "6",
+  y: "4",
+  width: "4",
+  height: "16"
+}), React.createElement("rect", {
+  x: "14",
+  y: "4",
+  width: "4",
+  height: "16"
+}));
+const IconSquare = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "currentColor",
+  stroke: "none"
+}, React.createElement("rect", {
+  x: "3",
+  y: "3",
+  width: "18",
+  height: "18",
+  rx: "3"
+}));
+const IconCal = () => React.createElement("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: "18",
+  height: "18",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, React.createElement("rect", {
+  x: "3",
+  y: "4",
+  width: "18",
+  height: "18",
+  rx: "2",
+  ry: "2"
+}), React.createElement("line", {
+  x1: "16",
+  y1: "2",
+  x2: "16",
+  y2: "6"
+}), React.createElement("line", {
+  x1: "8",
+  y1: "2",
+  x2: "8",
+  y2: "6"
+}), React.createElement("line", {
+  x1: "3",
+  y1: "10",
+  x2: "21",
+  y2: "10"
+}));
+const {
+  useState,
+  useRef,
+  useEffect
+} = React;
+const {
+  motion,
+  AnimatePresence
+} = Motion;
 
-const renderMix = (text, targetMark = null) => {
-  if (!text) return "";
-  const normalize = (c) => String(c).replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'");
-  const targetNorm = targetMark ? normalize(targetMark) : '';
-  const QUOTE_CHARS = /^[\u201c\u201d\u2018\u2019"'\uFF02\uFF07\u300C\u300D\u300E\u300F]$/;
-  const parts = text.split(/([.,!?\u201c\u201d\u2018\u2019"'\uFF02\uFF07\u300C\u300D\u300E\u300F])/g);
-  return parts.map((part, i) => {
-    if (/^[.,!?\u201c\u201d\u2018\u2019"'\uFF02\uFF07\u300C\u300D\u300E\u300F]$/.test(part)) {
-      const isTarget = targetMark && targetNorm.includes(normalize(part));
-      // 따옴표는 인라인 스타일로 명조체를 강제 적용 (CSS 우선순위 충돌 완전 우회)
-      const isQuote = QUOTE_CHARS.test(part);
-      return e('span', {
-        key: i,
-        className: `punctuation-mark${isTarget ? ' target-highlight' : ''}${isQuote ? ' quote-serif' : ''}`,
-        style: isQuote
-          ? { fontFamily: "Georgia, 'Times New Roman', Batang, 'Noto Serif KR', serif", fontWeight: 'bold' }
-          : undefined
-      }, part);
+/* ── 연필요정 ── */
+function PencilFairy({
+  className = "",
+  speech = "",
+  mini = false,
+  isListening = false
+}) {
+  return /*#__PURE__*/React.createElement(motion.div, {
+    className: "relative flex flex-col items-center " + className,
+    animate: {
+      y: isListening ? [0, -8, 0] : [0, -4, 0]
+    },
+    transition: {
+      repeat: Infinity,
+      duration: isListening ? 0.6 : 2.5,
+      ease: "easeInOut"
     }
-    return part;
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: mini ? "70" : "90",
+    height: mini ? "85" : "110",
+    viewBox: "0 0 120 150",
+    fill: "none"
+  }, /*#__PURE__*/React.createElement(motion.path, {
+    d: "M45 55C25 45 15 75 30 85C15 95 20 115 40 105",
+    stroke: isListening ? "#EF4444" : "#A0AEC0",
+    strokeWidth: "4",
+    strokeLinecap: "round",
+    animate: {
+      rotate: isListening ? [-8, 8, -8] : 0
+    }
+  }), /*#__PURE__*/React.createElement(motion.path, {
+    d: "M75 55C95 45 105 75 90 85C105 95 100 115 80 105",
+    stroke: isListening ? "#EF4444" : "#A0AEC0",
+    strokeWidth: "4",
+    strokeLinecap: "round",
+    animate: {
+      rotate: isListening ? [8, -8, 8] : 0
+    }
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M45 30L75 30V110L60 135L45 110V30Z",
+    fill: isListening ? "#F87171" : "#F6AD55",
+    stroke: "#4A5568",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M45 110L60 135L75 110H45Z",
+    fill: "#FBD38D",
+    stroke: "#4A5568",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M54 125L60 135L66 125H54Z",
+    fill: "#2D3748"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M45 15C45 10 75 10 75 15V30H45V15Z",
+    fill: "#FBB6CE",
+    stroke: "#4A5568",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "53",
+    cy: "65",
+    r: "2.5",
+    fill: isListening ? "#EF4444" : "#2D3748"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "67",
+    cy: "65",
+    r: "2.5",
+    fill: isListening ? "#EF4444" : "#2D3748"
+  }), /*#__PURE__*/React.createElement(motion.path, {
+    d: "M56 78C56 78 60 82 64 78",
+    stroke: "#2D3748",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    animate: {
+      scaleY: isListening ? [1, 1.8, 1] : 1
+    }
+  })), speech && /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0,
+      y: 10
+    },
+    animate: {
+      opacity: 1,
+      y: 0
+    },
+    className: "mt-2 bg-white px-5 py-2.5 rounded-3xl shadow-xl border-2 " + (isListening ? "border-red-400 ring-4 ring-red-50" : "border-orange-200") + " relative z-10 whitespace-pre-wrap max-w-[260px]"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-base font-bold leading-tight text-center " + (isListening ? "text-red-500" : "text-slate-800")
+  }, isListening ? "듣고 있어요!" : speech), /*#__PURE__*/React.createElement("div", {
+    className: "absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 " + (isListening ? "border-red-400" : "border-orange-200") + " rotate-45"
+  })));
+}
+const CARD_POOL = [/* ── 언제 (30개) ── */
+{
+  key: 'when',
+  label: '언제',
+  value: '오늘 아침에',
+  emoji: '🌅',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '오늘 점심에',
+  emoji: '🌞',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '오늘 저녁에',
+  emoji: '🌆',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '어제 아침에',
+  emoji: '☕',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '어제 점심에',
+  emoji: '🍱',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '어제 저녁에',
+  emoji: '🌇',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '어제 밤에',
+  emoji: '🌙',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '학교 가는 길에',
+  emoji: '🚶',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '학교 끝나고',
+  emoji: '🎒',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '점심 시간에',
+  emoji: '🍚',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '쉬는 시간에',
+  emoji: '⏰',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '체육 시간에',
+  emoji: '🏃',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '음악 시간에',
+  emoji: '🎵',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '미술 시간에',
+  emoji: '🖍️',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '주말 아침에',
+  emoji: '⛅',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '주말 오후에',
+  emoji: '🌤️',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '토요일에',
+  emoji: '📆',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '일요일에',
+  emoji: '🗓️',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '방학 때',
+  emoji: '🏖️',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '비 오는 날에',
+  emoji: '🌧️',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '눈 오는 날에',
+  emoji: '❄️',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '햇볕 좋은 날',
+  emoji: '☀️',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '바람 부는 날',
+  emoji: '💨',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '새벽에 일찍',
+  emoji: '🌄',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '잠들기 전에',
+  emoji: '🛏️',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '학교 도착해서',
+  emoji: '🏫',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '집에 와서',
+  emoji: '🏠',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '운동하다가',
+  emoji: '⚽',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '책 읽다가',
+  emoji: '📖',
+  color: 'amber'
+}, {
+  key: 'when',
+  label: '언제',
+  value: '친구를 만나서',
+  emoji: '👋',
+  color: 'amber'
+}, /* ── 어디서 (30개) ── */
+{
+  key: 'where',
+  label: '어디서',
+  value: '교실에서',
+  emoji: '🏫',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '운동장에서',
+  emoji: '⚽',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '강당에서',
+  emoji: '🏛️',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '도서관에서',
+  emoji: '📚',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '미술실에서',
+  emoji: '🎨',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '음악실에서',
+  emoji: '🎹',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '과학실에서',
+  emoji: '🔬',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '급식실에서',
+  emoji: '🍽️',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '보건실에서',
+  emoji: '🏥',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '학교 화단에서',
+  emoji: '🌷',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '학교 복도에서',
+  emoji: '🚪',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '학원에서',
+  emoji: '✏️',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '집에서',
+  emoji: '🏠',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '거실에서',
+  emoji: '🛋️',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '내 방에서',
+  emoji: '🛏️',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '부엌에서',
+  emoji: '🍳',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '마당에서',
+  emoji: '🌳',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '베란다에서',
+  emoji: '🪴',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '놀이터에서',
+  emoji: '🎠',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '공원에서',
+  emoji: '🌲',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '산에서',
+  emoji: '⛰️',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '바다에서',
+  emoji: '🏖️',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '강가에서',
+  emoji: '🌊',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '시장에서',
+  emoji: '🛒',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '마트에서',
+  emoji: '🏪',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '식당에서',
+  emoji: '🍴',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '카페에서',
+  emoji: '☕',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '박물관에서',
+  emoji: '🖼️',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '동물원에서',
+  emoji: '🦁',
+  color: 'blue'
+}, {
+  key: 'where',
+  label: '어디서',
+  value: '놀이공원에서',
+  emoji: '🎢',
+  color: 'blue'
+}, /* ── 누구와 (30개) ── */
+{
+  key: 'who',
+  label: '누구와',
+  value: '친구랑',
+  emoji: '👫',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '가족이랑',
+  emoji: '🏡',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '엄마랑',
+  emoji: '👩',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '아빠랑',
+  emoji: '👨',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '형이랑',
+  emoji: '👦',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '언니랑',
+  emoji: '👧',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '누나랑',
+  emoji: '👩‍🦰',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '오빠랑',
+  emoji: '👨‍🦱',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '동생이랑',
+  emoji: '🧒',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '할머니랑',
+  emoji: '👵',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '할아버지랑',
+  emoji: '👴',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '이모랑',
+  emoji: '💁‍♀️',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '삼촌이랑',
+  emoji: '💁‍♂️',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '사촌이랑',
+  emoji: '👬',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '선생님이랑',
+  emoji: '👩‍🏫',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '짝꿍이랑',
+  emoji: '🤝',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '같은 반 친구랑',
+  emoji: '👥',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '옆 반 친구랑',
+  emoji: '🤗',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '친한 친구랑',
+  emoji: '💕',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '새 친구랑',
+  emoji: '👋',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '학원 친구랑',
+  emoji: '📝',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '동네 친구랑',
+  emoji: '🏘️',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '강아지랑',
+  emoji: '🐶',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '고양이랑',
+  emoji: '🐱',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '햄스터랑',
+  emoji: '🐹',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '토끼랑',
+  emoji: '🐰',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '인형이랑',
+  emoji: '🧸',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '혼자서',
+  emoji: '🙋',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '나 혼자',
+  emoji: '🚶',
+  color: 'green'
+}, {
+  key: 'who',
+  label: '누구와',
+  value: '우리 모두',
+  emoji: '🎉',
+  color: 'green'
+}, /* ── 무엇을 (30개) ── */
+{
+  key: 'what',
+  label: '무엇을',
+  value: '신나게 놀았다',
+  emoji: '🎉',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '맛있게 먹었다',
+  emoji: '🍜',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '공부를 했다',
+  emoji: '📚',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '깔깔 웃었다',
+  emoji: '😄',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '그림을 그렸다',
+  emoji: '🎨',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '책을 읽었다',
+  emoji: '📖',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '글씨를 썼다',
+  emoji: '✏️',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '노래를 불렀다',
+  emoji: '🎤',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '춤을 췄다',
+  emoji: '💃',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '달리기를 했다',
+  emoji: '🏃',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '줄넘기를 했다',
+  emoji: '🪢',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '자전거를 탔다',
+  emoji: '🚲',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '산책을 했다',
+  emoji: '🚶',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '영화를 봤다',
+  emoji: '🎬',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '만화를 봤다',
+  emoji: '📺',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '게임을 했다',
+  emoji: '🎮',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '블록놀이 했다',
+  emoji: '🧱',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '소꿉놀이 했다',
+  emoji: '🪆',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '술래잡기 했다',
+  emoji: '👻',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '보드게임 했다',
+  emoji: '🎲',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '만들기를 했다',
+  emoji: '🛠️',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '정리를 했다',
+  emoji: '📦',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '청소를 했다',
+  emoji: '🧹',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '심부름을 했다',
+  emoji: '🛍️',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '동생과 놀았다',
+  emoji: '🤼',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '친구와 놀았다',
+  emoji: '🤝',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '새로운 걸 배웠다',
+  emoji: '🎓',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '약속을 지켰다',
+  emoji: '🤞',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '친구를 도와줬다',
+  emoji: '💪',
+  color: 'red'
+}, {
+  key: 'what',
+  label: '무엇을',
+  value: '칭찬을 받았다',
+  emoji: '🏆',
+  color: 'red'
+}];
+const CC = {
+  amber: {
+    f: 'from-amber-400',
+    t: 'to-amber-500',
+    b: 'bg-amber-100 text-amber-900'
+  },
+  blue: {
+    f: 'from-blue-400',
+    t: 'to-blue-600',
+    b: 'bg-blue-100 text-blue-900'
+  },
+  green: {
+    f: 'from-emerald-400',
+    t: 'to-emerald-600',
+    b: 'bg-emerald-100 text-emerald-900'
+  },
+  red: {
+    f: 'from-red-400',
+    t: 'to-red-600',
+    b: 'bg-red-100 text-red-900'
+  }
+};
+
+/* DIARY_OPTS: CARD_POOL에서 자동 동기화 (30개씩) */
+function optsFor(k) {
+  return CARD_POOL.filter(function (c) {
+    return c.key === k;
+  }).map(function (c) {
+    return c.value;
   });
-};
-
-// 예시 문장을 문장 단위로 분리한다.
-// 문장 종료 부호(. ! ? \u201c \u201d \u2018 \u2019)+공백 패턴에서 자른다.
-// 예) "'…해야지.' 나는 …했다." → ["'…해야지.'", "나는 …했다."]
-const splitIntoSentences = (text) => {
-  if (!text) return [];
-  const re = /[.!?\u201c\u201d\u2018\u2019]+\s+/g;
-  const result = [];
-  let lastEnd = 0;
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    result.push(text.slice(lastEnd, m.index + m[0].length).trim());
-    lastEnd = m.index + m[0].length;
-  }
-  if (lastEnd < text.length) {
-    const rest = text.slice(lastEnd).trim();
-    if (rest) result.push(rest);
-  }
-  return result.length > 0 ? result : [text];
-};
-
-// 문장부호의 칸 내 위치 (4칸 기준 — 교과서 원고지 규칙)
-// 여는 따옴표 → 오른쪽 위 | 닫는 따옴표 → 왼쪽 위 | 마침표·쉼표 → 왼쪽 아래
-const getMarkPosition = (char) => {
-  if (char === '.' || char === ',')
-    return {
-      buttonExtra: 'relative overflow-hidden',
-      markStyle: { position: 'absolute', bottom: '5%', left: '12%' }
-    };
-  // 여는 따옴표 " ' → 오른쪽 위
-  if (/[\u201c\u2018]/.test(char))
-    return {
-      buttonExtra: 'relative overflow-hidden',
-      markStyle: { position: 'absolute', top: '8%', right: '10%' }
-    };
-  // 닫는 따옴표 " ' → 왼쪽 위
-  if (/[\u201d\u2019]/.test(char))
-    return {
-      buttonExtra: 'relative overflow-hidden',
-      markStyle: { position: 'absolute', top: '8%', left: '10%' }
-    };
-  return { buttonExtra: 'flex items-center justify-center', markStyle: {} };
-};
-
-// 쓰임 텍스트를 렌더링하면서 핵심키워드를 하이라이트한다.
-// keyword 는 쉼표(,)로 구분된 여러 단어를 받을 수 있다.
-const renderMeaning = (text, keyword) => {
-  if (!text) return "";
-  if (!keyword) return renderMix(text);
-  const keywords = String(keyword).split(/[,，]/).map(k => k.trim()).filter(Boolean);
-  if (keywords.length === 0) return renderMix(text);
-  const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pattern = new RegExp('(' + keywords.map(escape).join('|') + ')', 'g');
-  const parts = String(text).split(pattern);
-  return parts.map((part, i) => {
-    if (!part) return null;
-    if (keywords.includes(part)) {
-      return e('span', { key: 'kw-' + i, className: 'text-underline' }, renderMix(part));
-    }
-    return e(React.Fragment, { key: 'tx-' + i }, renderMix(part));
+}
+const DIARY_OPTS = [{
+  key: 'when',
+  label: '언제?',
+  fairy: '언제 있었던 일이야?',
+  ins: '언제 있었던 일인지 카드에서 골라봐요!',
+  options: optsFor('when')
+}, {
+  key: 'where',
+  label: '어디서?',
+  fairy: '어디에서 일어났니?',
+  ins: '어디서 있었던 일인지 카드에서 골라봐요!',
+  options: optsFor('where')
+}, {
+  key: 'who',
+  label: '누구와?',
+  fairy: '누구랑 같이 있었어?',
+  ins: '누구와 있었는지 카드에서 골라봐요!',
+  options: optsFor('who')
+}, {
+  key: 'what',
+  label: '무엇을?',
+  fairy: '어떤 일을 했니?',
+  ins: '어떤 일을 했는지 카드에서 골라봐요!',
+  options: optsFor('what')
+}];
+const FEELINGS = [{
+  category: '마음이 아프거나 화가 날 때',
+  color: 'red',
+  desc: '부정적인 감정 (빨강)',
+  items: [{
+    label: '속상하다',
+    icon: '😢',
+    sentence: '속상하다',
+    def: '마음대로 안 풀릴 때',
+    eg: '색연필이 부러져서 속상했다.'
+  }, {
+    label: '서운하다',
+    icon: '😔',
+    sentence: '서운하다',
+    def: '친구가 안 놀아줄 때',
+    eg: '친구가 안 놀아주니 서운했다.'
+  }, {
+    label: '화나다',
+    icon: '😡',
+    sentence: '화나다',
+    def: '누가 놀렸을 때',
+    eg: '장난감이 망가져서 화났다.'
+  }, {
+    label: '무섭다',
+    icon: '😨',
+    sentence: '무섭다',
+    def: '어두운 곳에 갈 때',
+    eg: '밤에 화장실이 무서웠다.'
+  }, {
+    label: '떨리다',
+    icon: '💓',
+    sentence: '떨리다',
+    def: '발표할 때',
+    eg: '발표하려니 떨렸다.'
+  }]
+}, {
+  category: '일상에서 자주 느끼는 마음',
+  color: 'orange',
+  desc: '중립적인 감정 (주황)',
+  items: [{
+    label: '궁금하다',
+    icon: '🔍',
+    sentence: '궁금하다',
+    def: '알고 싶은 마음',
+    eg: '선물이 뭘지 궁금하다.'
+  }, {
+    label: '쑥스럽다',
+    icon: '😊',
+    sentence: '쑥스럽다',
+    def: '수줍은 느낌',
+    eg: '칭찬을 들으니 쑥스럽다.'
+  }, {
+    label: '부럽다',
+    icon: '✨',
+    sentence: '부럽다',
+    def: '남의 것이 좋아 보일 때',
+    eg: '새 자전거가 부럽다.'
+  }, {
+    label: '심심하다',
+    icon: '🥱',
+    sentence: '심심하다',
+    def: '할 일이 없을 때',
+    eg: '비 와서 심심하다.'
+  }]
+}, {
+  category: '기분이 좋고 행복할 때',
+  color: 'green',
+  desc: '긍정적인 감정 (초록)',
+  items: [{
+    label: '뿌듯하다',
+    icon: '⭐',
+    sentence: '뿌듯하다',
+    def: '만족스러울 때',
+    eg: '퍼즐을 맞춰서 뿌듯하다.'
+  }, {
+    label: '설레다',
+    icon: '💗',
+    sentence: '설레다',
+    def: '기대될 때',
+    eg: '소풍 갈 생각에 설렌다.'
+  }, {
+    label: '신나다',
+    icon: '🎡',
+    sentence: '신나다',
+    def: '즐거울 때',
+    eg: '놀이공원에서 신난다.'
+  }, {
+    label: '기쁘다',
+    icon: '🎁',
+    sentence: '기쁘다',
+    def: '원하는 게 이루어졌을 때',
+    eg: '선물을 받으니 기쁘다.'
+  }, {
+    label: '재미있다',
+    icon: '😄',
+    sentence: '재미있다',
+    def: '즐겁고 유쾌할 때',
+    eg: '공놀이가 재미있다.'
+  }, {
+    label: '고맙다',
+    icon: '💕',
+    sentence: '고맙다',
+    def: '도움 받았을 때',
+    eg: '가방을 들어줘서 고맙다.'
+  }]
+}];
+const GAS_URL = "https://script.google.com/macros/s/여기에_본인의_GAS_배포_URL을_붙여넣으세요/exec";
+const isGasOk = GAS_URL.indexOf("script.google.com") !== -1 && GAS_URL.indexOf("여기에") === -1;
+const DUMMY = [{
+  id: 1,
+  name: "강현우"
+}, {
+  id: 2,
+  name: "김민서"
+}, {
+  id: 3,
+  name: "박준영"
+}, {
+  id: 4,
+  name: "이서윤"
+}, {
+  id: 5,
+  name: "최도윤"
+}];
+function App() {
+  const [step, setStep] = useState(0);
+  const [nickname, setNickname] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  const [studentList, setStudentList] = useState([]);
+  const [isDropdown, setIsDropdown] = useState(false);
+  const [parts, setParts] = useState({
+    when: "",
+    where: "",
+    who: "",
+    what: ""
   });
-};
-
-const Icon = ({ name, size = 24, className = "" }) => {
-  const icons = {
-    star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
-    check: 'M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3',
-    user: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
-    help: 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
-    book: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
-    x: 'M18 6L6 18 M6 6l12 12',
-    chevronRight: 'M9 18l6-6-6-6',
-    chevronLeft: 'M15 18l-6-6 6-6',
-    chevronDown: 'M6 9l6 6 6-6',
-    volume: 'M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07',
-    home: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
-  };
-  return e('svg', {
-    width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
-    stroke: 'currentColor', strokeWidth: '3', strokeLinecap: 'round',
-    strokeLinejoin: 'round', className
-  }, e('path', { d: icons[name] }));
-};
-
-const PencilFairy = ({ className = "", size = 100 }) => {
-  const h = size * 1.25;
-  const fairySVG = e('svg', { width: size, height: h, viewBox: "0 0 120 150", fill: "none", xmlns: "http://www.w3.org/2000/svg" },
-    e('path', { d: "M45 55C25 45 15 75 30 85C15 95 20 115 40 105", stroke: "#A0AEC0", strokeWidth: "3", strokeLinecap: "round", style: { transformOrigin: "45px 55px", transform: "rotate(-10deg)" } }),
-    e('path', { d: "M75 55C95 45 105 75 90 85C105 95 100 115 80 105", stroke: "#A0AEC0", strokeWidth: "3", strokeLinecap: "round", style: { transformOrigin: "75px 55px", transform: "rotate(10deg)" } }),
-    e('path', { d: "M45 30L75 30V110L60 135L45 110V30Z", fill: "#F6AD55", stroke: "#4A5568", strokeWidth: "2" }),
-    e('path', { d: "M55 30V110", stroke: "#ED8936", strokeWidth: "1" }),
-    e('path', { d: "M65 30V110", stroke: "#ED8936", strokeWidth: "1" }),
-    e('path', { d: "M45 110L60 135L75 110H45Z", fill: "#FBD38D", stroke: "#4A5568", strokeWidth: "2" }),
-    e('path', { d: "M54 125L60 135L66 125H54Z", fill: "#2D3748" }),
-    e('path', { d: "M45 15C45 10 75 10 75 15V30H45V15Z", fill: "#FBB6CE", stroke: "#4A5568", strokeWidth: "2" }),
-    e('rect', { x: 45, y: 25, width: 30, height: 5, fill: "#CBD5E0", stroke: "#4A5568", strokeWidth: "1" }),
-    e('circle', { cx: 53, cy: 65, r: 2, fill: "#2D3748" }),
-    e('circle', { cx: 67, cy: 65, r: 2, fill: "#2D346E" }),
-    e('path', { d: "M58 75C58 75 60 78 62 75", stroke: "#2D346E", strokeWidth: "2.5", strokeLinecap: "round" }),
-    e('circle', { cx: 50, cy: 70, r: 3, fill: "#FED7E2", opacity: "0.6" }),
-    e('circle', { cx: 70, cy: 70, r: 3, fill: "#FED7E2", opacity: "0.6" })
-  );
-  return motion
-    ? e(motion.div, { className: `relative inline-block ${className}`, animate: { y: [0, -8, 0] }, transition: { repeat: Infinity, duration: 2.5, ease: "easeInOut" } }, fairySVG)
-    : e('div', { className: `relative inline-block ${className}` }, fairySVG);
-};
-
-// 기본 문제 목록 (GAS '예시문장' 시트 대체)
-const problemsList = [
-  { textParts: ["우리 학교는 참 예뻐요", ""], ans: ["."], hint: "문장이 끝날 때는 마침표(.)를 찍어요." },
-  { textParts: ["너는 무엇을 좋아하니", ""], ans: ["?"], hint: "궁금할 때는 물음표(?)를 찍어요." },
-  { textParts: ["우와, 정말 대단하다", ""], ans: ["!"], hint: "느낌을 나타낼 때는 느낌표(!)를 찍어요." },
-  { textParts: ["수박, 참외, 딸기는 여름 과일이에요", ""], ans: ["."], hint: "문장이 끝나면 마침표(.)를 찍어요." },
-  { textParts: ["어머니께서 ", "\u301C학교 다녀왔습니다\u301C", " 라고 말씀하셨어요"], ans: ["\u201c", "\u201d"], hint: "말을 그대로 옮길 때는 큰따옴표(\u201c \u201d)를 사용해요." },
-  { textParts: ["나는 ", "\u2018할 수 있어\u2019", " 라고 마음속으로 다짐했어요"], ans: ["\u2018", "\u2019"], hint: "마음속 생각을 나타낼 때는 작은따옴표(\u2018 \u2019)를 사용해요." },
-  { textParts: ["오늘 날씨가 참 맑네요", ""], ans: ["."], hint: "문장이 끝났으니 마침표(.)를 찍어요." },
-  { textParts: ["점심 메뉴는 무엇인가요", ""], ans: ["?"], hint: "질문하는 문장 끝에는 물음표(?)를 찍어요." },
-  { textParts: ["앗, 깜짝이야", ""], ans: ["!"], hint: "놀람을 나타낼 때는 느낌표(!)를 써요." },
-  { textParts: ["선생님께서 ", "\u201c자리에 앉으렴\u201d", " 하고 말씀하셨어요"], ans: ["\u201c", "\u201d"], hint: "다른 사람의 말을 옮길 때는 큰따옴표(\u201c \u201d)가 필요해요." },
-  { textParts: ["연필, 지우개, 공책을 챙겼나요", ""], ans: ["?"], hint: "질문하는 문장 끝에는 물음표(?)를 찍어요." },
-  { textParts: ["철수야, 같이 놀자", ""], ans: ["."], hint: "부르는 말 뒤에 쉼표(,)를 쓰고, 문장 끝에 마침표(.)를 찍어요." },
-  { textParts: ["꽃이 정말 예쁘구나", ""], ans: ["!"], hint: "감탄하는 문장 끝에는 느낌표(!)를 찍어요." },
-  { textParts: ["영희는 ", "\u2018꼭 가고 싶다\u2019", " 라고 생각했어요"], ans: ["\u2018", "\u2019"], hint: "생각을 강조할 때는 작은따옴표(\u2018 \u2019)를 써요." },
-  { textParts: ["지금 몇 시예요", ""], ans: ["?"], hint: "시간을 물어볼 때는 물음표(?)가 필요해요." },
-  { textParts: ["강아지가 멍멍 짖어요", ""], ans: ["."], hint: "문장이 끝났으니 마침표(.)를 찍어주세요." },
-  { textParts: ["우와, 무지개다", ""], ans: ["!"], hint: "놀람이나 감탄에는 느낌표(!)를 사용해요." },
-  { textParts: ["사과가 아주 빨갛네요", ""], ans: ["."], hint: "상태를 설명하는 문장 끝에는 마침표(.)를 찍어요." },
-  { textParts: ["토끼가 깡충깡충 뛰어갑니다", ""], ans: ["."], hint: "끝맺는 문장에는 마침표(.)가 어울려요." },
-  { textParts: ["어디에서 오셨나요", ""], ans: ["?"], hint: "장소를 물어보는 문장 끝에는 물음표(?)를 찍어요." }
-];
-
-// 기본 학생 목록 (GAS '명단' 시트 대체)
-const DEFAULT_STUDENTS = [
-  { id: 1, name: "김민준" }, { id: 2, name: "이서연" }, { id: 3, name: "박지우" },
-  { id: 4, name: "최수아" }, { id: 5, name: "정하준" }, { id: 6, name: "강도윤" },
-  { id: 7, name: "윤시은" }, { id: 8, name: "임지호" }, { id: 9, name: "한소율" }, { id: 10, name: "오유진" }
-];
-
-// 문장부호 이름 → 라벨·색상 매핑 (시트에는 이름·쓰임·예시만 들어있고, 시각 메타데이터는 앱이 제공)
-const NAME_TO_META = {
-  "마침표":   { label: ".",           color: "text-rose-600 bg-rose-50",     chars: ["."] },
-  "쉼표":     { label: ",",           color: "text-emerald-600 bg-emerald-50", chars: [","] },
-  "물음표":   { label: "?",           color: "text-purple-600 bg-purple-50", chars: ["?"] },
-  "느낌표":   { label: "!",           color: "text-amber-600 bg-amber-50",   chars: ["!"] },
-  "큰따옴표": { label: "\u201c \u201d", color: "text-orange-600 bg-orange-50", chars: ["\u201c", "\u201d"] },
-  "작은따옴표": { label: "\u2018 \u2019", color: "text-pink-600 bg-pink-50",   chars: ["\u2018", "\u2019"] }
-};
-
-// 기본 marks (GAS '예시문장' 시트 대체)
-const DEFAULT_MARKS = [
-  { label: ".", name: "마침표", meaning: "설명하는 문장 끝에 쓴다.", keyword: "설명하는", color: "text-rose-600 bg-rose-50", examples: ["학교에 갑니다.", "사과를 먹어요.", "밖은 추워요."] },
-  { label: ",", name: "쉼표", meaning: "부르는 말이나 대답하는 말 뒤에 쓴다.", keyword: "부르는 말,대답하는 말", color: "text-emerald-600 bg-emerald-50", examples: ["수박, 참외, 딸기를 샀어요.", "철수야, 같이 가자.", "네, 알겠습니다."] },
-  { label: "?", name: "물음표", meaning: "묻는 문장 끝에 쓴다.", keyword: "묻는", color: "text-purple-600 bg-purple-50", examples: ["어디 가니?", "기분이 어때?", "이게 뭐야?"] },
-  { label: "!", name: "느낌표", meaning: "느낌을 나타내는 문장 끝에 쓴다.", keyword: "느낌", color: "text-amber-600 bg-amber-50", examples: ["정말 대단해!", "앗 뜨거워!", "우와 맛있다!"] },
-  { label: "\u201c \u201d", name: "큰따옴표", meaning: "인물이 소리 내어 한 말을 나타낼 때 쓴다.", keyword: "소리 내어 한 말", color: "text-orange-600 bg-orange-50", examples: ["\u201c안녕\u201d", "\u201c고마워\u201d", "\u201c어서 와\u201d"] },
-  { label: "\u2018 \u2019", name: "작은따옴표", meaning: "인물이 마음속으로 한 말을 나타낼 때 쓴다.", keyword: "마음속으로 한 말", color: "text-pink-600 bg-pink-50", examples: ["\u2018어떡하지\u2019", "\u2018참 잘했어\u2019", "\u2018할 수 있어\u2019"] }
-];
-
-// 시트의 예시 문장을 3단계 문제 형식으로 변환
-const parseSentenceToProblem = (sentence, punctuationName) => {
-  const meta = NAME_TO_META[punctuationName];
-  if (!meta || !sentence) return null;
-
-  // 일반 따옴표(" ')를 곡선 따옴표로 정규화
-  let s = String(sentence);
-  if (punctuationName === "큰따옴표") {
-    let c = 0;
-    s = s.replace(/"/g, () => (++c % 2 === 1 ? "\u201c" : "\u201d"));
-  } else if (punctuationName === "작은따옴표") {
-    let c = 0;
-    s = s.replace(/'/g, () => (++c % 2 === 1 ? "\u2018" : "\u2019"));
+  const [sub, setSub] = useState(0);
+  const [extra, setExtra] = useState("");
+  const [feelings, setFeelings] = useState([]);
+  const [showInst, setShowInst] = useState(false);
+  const [prog, setProg] = useState(0);
+  const [isCapture, setIsCapture] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+  const [listening, setListening] = useState(false);
+  const [interim, setInterim] = useState("");
+  const [today, setToday] = useState("");
+  const [micSt, setMicSt] = useState("idle");
+  const [feelReason, setFeelReason] = useState("");
+  const [tooltip, setTooltip] = useState(null);
+  const [activeCat, setActiveCat] = useState(null);
+  const [eval_, setEval] = useState({
+    q1: 0,
+    q2: 0
+  });
+  const [saved, setSaved] = useState(false);
+  const [drawn, setDrawn] = useState(null);
+  const [flipped, setFlipped] = useState(null);
+  const [cardGroups] = useState(function () {
+    const groups = {
+      when: [],
+      where: [],
+      who: [],
+      what: []
+    };
+    CARD_POOL.forEach(function (c) {
+      groups[c.key].push(c);
+    });
+    Object.keys(groups).forEach(function (key) {
+      const arr = groups[key];
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i];
+        arr[i] = arr[j];
+        arr[j] = t;
+      }
+      groups[key] = arr.slice(0, 5);
+    });
+    return groups;
+  });
+  const recRef = useRef(null);
+  const cardRef = useRef(null);
+  var activeOpts = drawn ? DIARY_OPTS.filter(function (o) {
+    return o.key !== drawn.key;
+  }) : DIARY_OPTS;
+  useEffect(function () {
+    var n = new Date();
+    setToday(n.getFullYear() + "년 " + (n.getMonth() + 1) + "월 " + n.getDate() + "일");
+    if (isGasOk) {
+      fetch(GAS_URL + "?type=getStudents").then(function (r) {
+        return r.json();
+      }).then(function (d) {
+        if (d && Array.isArray(d)) setStudentList(d);else setStudentList(DUMMY);
+      }).catch(function () {
+        setStudentList(DUMMY);
+      });
+    } else {
+      setStudentList(DUMMY);
+    }
+  }, []);
+  useEffect(function () {
+    if (step === 3 && drawn) setShowInst(true);
+  }, [step, sub, drawn]);
+  useEffect(function () {
+    if (step === 7 && eval_.q1 > 0 && eval_.q2 > 0 && !saved) {
+      saveToSheet();
+      setSaved(true);
+    }
+  }, [step, eval_.q1, eval_.q2, saved]);
+  function stopListen() {
+    if (listening && recRef.current) recRef.current.stop();
   }
-
-  let textParts, ans;
-  if (meta.chars.length === 1) {
-    const mark = meta.chars[0];
-    const idx = s.lastIndexOf(mark);
-    if (idx === -1) return null;
-    textParts = [s.substring(0, idx), s.substring(idx + 1)];
-    ans = [mark];
-  } else {
-    const [openMark, closeMark] = meta.chars;
-    const openIdx = s.indexOf(openMark);
-    const closeIdx = s.indexOf(closeMark, openIdx + 1);
-    if (openIdx === -1 || closeIdx === -1) return null;
-    textParts = [
-      s.substring(0, openIdx),
-      s.substring(openIdx + 1, closeIdx),
-      s.substring(closeIdx + 1)
-    ];
-    ans = [openMark, closeMark];
+  function goNext() {
+    stopListen();
+    setInterim("");
+    setStep(function (s) {
+      return s + 1;
+    });
+    setProg(function (p) {
+      return Math.min(p + 100 / 7, 100);
+    });
   }
-
-  // 정답 문자가 본문(textParts)에 남아 있으면 정답 노출이 되므로 사용하지 않음
-  // (예: 한 문장에 따옴표 쌍이 여러 개, 또는 마침표가 여러 번 등장하는 경우)
-  if (textParts.some(part => meta.chars.some(ch => part.includes(ch)))) return null;
-
-  return {
-    textParts: textParts,
-    ans: ans,
-    hint: `${punctuationName}(${ans.join(' ')})를 알맞게 사용해보세요.`
-  };
-};
-
-// 쓰임 문장(예: "느낌을 나타내는 문장 끝에 쓴다.")을 명사구(예: "느낌을 나타내는 문장 끝에 쓰는 것")로 변환
-const meaningToNounPhrase = (meaning) => {
-  let s = String(meaning || '').replace(/[.\s]+$/, '');
-  if (s.endsWith('쓴다'))     return s.slice(0, -2) + '쓰는 것';
-  if (s.endsWith('써요'))     return s.slice(0, -2) + '쓰는 것';
-  if (s.endsWith('사용한다')) return s.slice(0, -3) + '사용하는 것';
-  if (s.endsWith('사용해요')) return s.slice(0, -3) + '사용하는 것';
-  if (s.endsWith('나타낸다')) return s.slice(0, -3) + '나타내는 것';
-  if (s.endsWith('나타내요')) return s.slice(0, -3) + '나타내는 것';
-  return s;
-};
-
-const App = () => {
-  const [stage, setStage] = useState('landing');
-  const [user, setUser] = useState(null);
-  const [students, setStudents] = useState([]);
-  const [loadingStudents, setLoadingStudents] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [collected, setCollected] = useState([]);
-  const [studyIdx, setStudyIdx] = useState(0);
-  const [s1Idx, setS1Idx] = useState(0);
-  const [s1Quiz, setS1Quiz] = useState([]);
-  const [s1SubStep, setS1SubStep] = useState(0);
-  const [s1Feedback, setS1Feedback] = useState(false);
-  const [s1Wrong, setS1Wrong] = useState(null);
-  const [s2Idx, setS2Idx] = useState(0);
-  const [s2Quiz, setS2Quiz] = useState([]);
-  const [s2Answers, setS2Answers] = useState([]);
-  const [s2ActiveHole, setS2ActiveHole] = useState(0);
-  const [s2Feedback, setS2Feedback] = useState(false);
-  const [isCorrectS2, setIsCorrectS2] = useState(false);
-  const [isFlexibleMatch, setIsFlexibleMatch] = useState(false);
-  const [s2Limit, setS2Limit] = useState(5);
-  const [s2MissedPool, setS2MissedPool] = useState([]);
-  const [showS2Config, setShowS2Config] = useState(false);
-  const [dynamicProblems, setDynamicProblems] = useState([]);
-  const [s2Results, setS2Results] = useState({ correct: [], missed: [] });
-  const [s1Results, setS1Results] = useState({ correct: [], missed: [] });
-  const [activeMark, setActiveMark] = useState(null);
-  const [learned, setLearned] = useState([]);
-  const [studyFeedback, setStudyFeedback] = useState(false);
-  const [showS2Hint, setShowS2Hint] = useState(false);
-  const [viewedTutorials, setViewedTutorials] = useState([]);
-  const [isStep1Cleared, setIsStep1Cleared] = useState(false);
-  const [isStep2Cleared, setIsStep2Cleared] = useState(false);
-  const [reportTarget, setReportTarget] = useState('step2'); // 'step1' | 'step2'
-  const [hasReviewedMissed, setHasReviewedMissed] = useState(false);
-  const [isReviewMode, setIsReviewMode] = useState(false);
-  const [showNotebookPractice, setShowNotebookPractice] = useState(false);
-
-  const [marks, setMarks] = useState(DEFAULT_MARKS);
-
-  // TutorialPopup component
-  const TutorialPopup = ({ type, onClose }) => {
-    const [tut1Sub, setTut1Sub] = useState(0);
-    const [tut1Wrong, setTut1Wrong] = useState(false);
-    const [tut2Hole, setTut2Hole] = useState(0);   // 처음부터 빈칸 선택 상태로 시작
-    const [tut2Answer, setTut2Answer] = useState(null);
-    const [tut2Checked, setTut2Checked] = useState(false);
-
-    const tutMark = useMemo(() => marks.find(m => m.label === '.'), []);
-    const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-
-    const tut1NameOpts = useMemo(() => {
-      const others = shuffle(marks.filter(m => m.label !== '.')).slice(0, 2);
-      return shuffle([...others, tutMark]);
-    }, []);
-
-    const tut1MeaningOpts = useMemo(() => {
-      const others = shuffle(marks.filter(m => m.label !== '.')).slice(0, 2);
-      return shuffle([...others, tutMark]);
-    }, []);
-
-    const hints1 = [
-      { emoji: '👀', msg: '문장 속 빨간 부호를 잘 봐요!', sub: '이 부호의 이름을 아래에서 골라보세요.' },
-      { emoji: '🤔', msg: '이름을 맞혔어요! 이 부호의 쓰임은?', sub: '알맞은 설명을 골라보세요.' },
-    ];
-
-    const tut2Labels = ['.', ',', '?', '!', '\u201c', '\u201d', '\u2018', '\u2019'];
-
-    if (type === 'step1') {
-      return e('div', { className: 'fixed inset-0 bg-black/70 flex items-center justify-center z-[1000] backdrop-blur-md p-4' },
-        e('div', { className: 'sticker-card p-8 max-w-4xl w-full shadow-2xl animate-in zoom-in duration-300 flex flex-col gap-5' },
-          e('div', { className: 'flex items-center justify-between' },
-            e('div', { className: 'bg-orange-100 text-orange-600 px-6 py-2 rounded-full text-2xl font-bold' }, '🎓 2단계 사용방법 체험'),
-            tut1Sub < 2 && e('div', { className: 'text-2xl font-bold text-slate-400' }, `${tut1Sub + 1} / 2`)
-          ),
-          tut1Sub < 2 && e('div', { className: 'w-full h-3 bg-slate-100 rounded-full overflow-hidden' },
-            e('div', { className: 'h-full bg-orange-400 transition-all duration-500', style: { width: `${(tut1Sub / 2) * 100}%` } })
-          ),
-          tut1Sub < 2 ? e(React.Fragment, null,
-            e('div', { className: 'bg-blue-50 border-2 border-blue-200 rounded-[25px] p-5 flex items-center gap-4' },
-              e('div', { className: 'text-5xl shrink-0' }, hints1[tut1Sub].emoji),
-              e('div', null,
-                e('p', { className: 'text-3xl font-bold text-blue-700' }, hints1[tut1Sub].msg),
-                e('p', { className: 'text-xl text-blue-500 mt-1' }, hints1[tut1Sub].sub)
-              )
-            ),
-            e('div', { className: 'sticker-card p-5 text-center border-4 border-orange-100' },
-              e('div', { className: 'text-5xl font-bold text-[#2D346E]' }, renderMix('학교에 갑니다.', '.')),
-              tut1Sub > 0 && e('div', { className: 'flex flex-wrap gap-3 justify-center mt-4' },
-                e('div', { className: 'bg-blue-50 text-blue-600 px-6 py-2 rounded-full text-2xl font-bold border-2 border-blue-200 flex items-center gap-2' },
-                  e(Icon, { name: 'check', size: 20 }), tutMark.name
-                )
-              )
-            ),
-            tut1Wrong && e('div', { className: 'bg-red-50 border-2 border-red-200 rounded-[20px] p-4 text-center text-2xl font-bold text-red-500' },
-              '💡 빨간 부호(.)가 힌트예요! 다시 잘 살펴봐요!'
-            ),
-            e('div', { className: `grid gap-4 ${tut1Sub === 0 ? 'grid-cols-3' : 'grid-cols-2'}` },
-              tut1Sub === 0 && tut1NameOpts.map(m => e('button', {
-                key: m.label,
-                onClick: () => { if (m.label === '.') { setTut1Wrong(false); setTut1Sub(1); } else setTut1Wrong(true); },
-                className: 'sticker-card p-6 text-4xl font-bold text-[#2D346E] hover:bg-blue-50 active:scale-95 transition-all border-2 border-transparent hover:border-blue-300'
-              }, m.name)),
-              tut1Sub === 1 && tut1MeaningOpts.map(m => e('button', {
-                key: m.label,
-                onClick: () => { if (m.label === '.') { setTut1Wrong(false); setTut1Sub(2); } else setTut1Wrong(true); },
-                className: 'sticker-card p-5 text-3xl font-bold text-[#2D346E] hover:bg-orange-50 active:scale-95 transition-all border-2 border-transparent hover:border-orange-300'
-              }, renderMeaning(m.meaning, m.keyword)))
-            )
-          ) : e('div', { className: 'flex flex-col items-center gap-6 py-4 animate-in fade-in zoom-in duration-300' },
-            e('div', { className: 'text-[80px]' }, '🎉'),
-            e('p', { className: 'text-4xl font-bold text-[#2D346E] text-center' }, '완벽해요! 이제 진짜 문제를 풀어봐요!'),
-            e('button', { onClick: onClose, className: 'w-full btn-cute btn-orange py-7 text-4xl font-bold border-none shadow-xl' }, '퀴즈 시작하기!')
-          )
-        )
-      );
-    }
-
-    // 3단계 튜토리얼 (빈칸 클릭 단계 제거 → 2단계)
-    return e('div', { className: 'fixed inset-0 bg-black/70 flex items-center justify-center z-[1000] backdrop-blur-md p-4' },
-      e('div', { className: 'sticker-card p-5 max-w-4xl w-full shadow-2xl animate-in zoom-in duration-300 flex flex-col gap-3' },
-        e('div', { className: 'flex items-center justify-between' },
-          e('div', { className: 'bg-yellow-100 text-yellow-600 px-6 py-2 rounded-full text-2xl font-bold' }, '🎓 3단계 사용방법 체험'),
-          !tut2Checked && e('div', { className: 'text-2xl font-bold text-slate-400' },
-            tut2Answer ? '2 / 2' : '1 / 2'
-          )
-        ),
-        !tut2Checked && e('div', { className: 'w-full h-3 bg-slate-100 rounded-full overflow-hidden' },
-          e('div', { className: 'h-full bg-yellow-400 transition-all duration-500', style: { width: tut2Answer ? '50%' : '0%' } })
-        ),
-        e('div', { className: 'bg-yellow-50 border-2 border-yellow-200 rounded-[20px] p-4 flex items-center gap-3' },
-          e('div', { className: 'text-4xl shrink-0' }, tut2Checked ? '🎉' : (tut2Answer ? '✅' : '⬇️')),
-          e('p', { className: 'text-3xl font-bold text-yellow-700 leading-tight' },
-            tut2Checked ? '정답! 이제 진짜 문제를 풀어봐요!' :
-              (tut2Answer ? "'정답 확인' 버튼을 눌러보세요!" :
-                '아래 부호 스티커 중 마침표(.)를 골라요!')
-          )
-        ),
-        e('div', { className: 'sticker-card p-5 text-center border-4 border-yellow-100 flex flex-col items-center gap-4' },
-          e('div', { className: 'text-5xl font-bold text-[#2D346E] flex items-center gap-4' },
-            e('span', null, '강아지가 왔어요'),
-            e('div', {
-              onClick: () => { if (!tut2Checked) setTut2Hole(0); },
-              style: { position: 'relative', overflow: 'hidden' },
-              className: `drop-zone cursor-pointer !w-20 !h-20 ${tut2Answer ? 'drop-zone-filled' : ''} ${tut2Hole === 0 ? 'border-orange-400 ring-8 ring-orange-100' : ''}`
-            }, tut2Answer
-              ? (() => { const bp = getMarkPosition(tut2Answer); return e('span', { style: { ...bp.markStyle, fontSize: '30px' } }, renderMix(tut2Answer)); })()
-              : ''
-            )
-          ),
-          e('button', {
-            disabled: !tut2Answer || tut2Checked,
-            onClick: () => { if (tut2Answer) setTut2Checked(true); },
-            className: `btn-cute btn-orange py-4 px-20 text-3xl font-bold ${(!tut2Answer || tut2Checked) ? 'opacity-40 grayscale' : ''}`
-          }, '정답 확인!'),
-          tut2Checked && e('div', { className: 'bg-orange-50 rounded-[15px] p-4 text-2xl font-bold text-orange-700 w-full whitespace-pre-wrap' },
-            "✨ 정말 참 잘했어요!\n\n'마침표(.)'는 설명하는 문장 끝에 써요."
-          )
-        ),
-        !tut2Checked && e('div', { className: 'flex flex-wrap justify-center gap-3' },
-          tut2Labels.map(label => {
-            const markInfo = marks.find(m => m.label.includes(label));
-            const colorClass = markInfo ? markInfo.color.split(' ')[0] : 'text-[#2D346E]';
-            const pos = getMarkPosition(label);
-            return e('button', {
-              key: label,
-              onClick: () => { if (tut2Hole !== null && !tut2Checked) setTut2Answer(label); },
-              className: `w-16 h-16 rounded-[24px] shadow-lg font-bold border-4 transition-all text-[30px] ${pos.buttonExtra} ${tut2Answer === label ? 'border-orange-400 bg-orange-50 scale-110' : 'border-white bg-white hover:bg-orange-50'}`
-            }, e('span', { className: colorClass, style: pos.markStyle }, renderMix(label)));
-          })
-        ),
-        tut2Checked && e('button', {
-          onClick: onClose,
-          className: 'w-full btn-cute btn-orange py-5 text-4xl font-bold border-none shadow-xl animate-in fade-in zoom-in duration-300'
-        }, '문제 풀기 시작!')
-      )
-    );
-  };
-
-  useEffect(() => {
-    const BASE_W = 1280, BASE_H = 800;
-    const scaleCanvas = () => {
-      const wrapper = document.getElementById('canvas-wrapper');
-      if (!wrapper) return;
-      const scale = Math.min(window.innerWidth / BASE_W, window.innerHeight / BASE_H);
-      wrapper.style.transform = `scale(${scale})`;
-    };
-    scaleCanvas();
-    window.addEventListener('resize', scaleCanvas);
-    window.addEventListener('orientationchange', scaleCanvas);
-    return () => {
-      window.removeEventListener('resize', scaleCanvas);
-      window.removeEventListener('orientationchange', scaleCanvas);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof google !== 'undefined') {
-      setLoadingStudents(true);
-      google.script.run
-        .withSuccessHandler((data) => {
-          setStudents(data && data.length > 0 ? data : DEFAULT_STUDENTS);
-          setLoadingStudents(false);
-        })
-        .withFailureHandler(() => { setStudents(DEFAULT_STUDENTS); setLoadingStudents(false); })
-        .getStudents();
+  function goPrev() {
+    stopListen();
+    setInterim("");
+    if (step === 3 && drawn && sub > 0) {
+      setSub(function (s) {
+        return s - 1;
+      });
+      setProg(function (p) {
+        return p - 4;
+      });
+    } else if (step === 3 && drawn && sub === 0) {
+      setDrawn(null);
+      setFlipped(null);
+      setParts({
+        when: "",
+        where: "",
+        who: "",
+        what: ""
+      });
     } else {
-      setStudents(DEFAULT_STUDENTS);
-    }
-  }, []);
-
-  // 시트('예시문장')에서 문장부호 데이터 로드 → marks 와 dynamicProblems 업데이트
-  useEffect(() => {
-    if (typeof google === 'undefined') return;
-    google.script.run
-      .withSuccessHandler((data) => {
-        if (!data || !Array.isArray(data) || data.length === 0) return;
-
-        // 시트의 부호 이름("큰 따옴표" 등)을 NAME_TO_META 키("큰따옴표")로 정규화
-        const matchMetaName = (rawName) => {
-          if (!rawName) return null;
-          const stripped = String(rawName).replace(/\s/g, '');
-          for (const key in NAME_TO_META) {
-            if (key.replace(/\s/g, '') === stripped) return key;
-          }
-          return null;
-        };
-
-        // 시트 데이터 → marks 형태 변환
-        const newMarks = data
-          .filter(d => d && matchMetaName(d.punctuation))
-          .map(d => {
-            const canonical = matchMetaName(d.punctuation);
-            return {
-              name: canonical,
-              meaning: d.usage || '',
-              keyword: d.keyword || '',
-              examples: Array.isArray(d.examples) ? d.examples : [],
-              ...NAME_TO_META[canonical]
-            };
-          });
-        // 시트 데이터가 있는 부호는 시트 우선, 없는 부호는 DEFAULT_MARKS 유지
-        if (newMarks.length > 0) {
-          const merged = DEFAULT_MARKS.map(def => {
-            const fromSheet = newMarks.find(sm => sm.name === def.name);
-            return fromSheet || def;
-          });
-          setMarks(merged);
-        }
-
-        // 시트 데이터 → 3단계 문제 변환
-        const problems = [];
-        data.forEach(d => {
-          if (!d || !d.examples) return;
-          const canonical = matchMetaName(d.punctuation);
-          if (!canonical) return;
-          d.examples.forEach(ex => {
-            const p = parseSentenceToProblem(ex, canonical);
-            if (p) problems.push(p);
-          });
-        });
-        if (problems.length > 0) setDynamicProblems(problems);
-      })
-      .withFailureHandler((err) => { console.log("getMarksData 실패, 기본값 사용:", err); })
-      .getMarksData();
-  }, []);
-
-  // 1단계 학습 완료 저장 (학습한 부호 목록)
-  const saveStudyToSheet = (learnedLabels) => {
-    if (!user) return;
-    const studyContent = (learnedLabels || []).map(label => {
-      const m = marks.find(mark => mark.label === label);
-      return m ? m.name : label;
-    }).join(', ');
-    const data = { number: getStudentNumber(), name: user.name, studyContent: studyContent || '없음' };
-    if (typeof google !== 'undefined') {
-      google.script.run
-        .withSuccessHandler(() => console.log("1단계 기록 저장 완료"))
-        .withFailureHandler(err => console.error("1단계 기록 저장 실패", err))
-        .saveStudyResult(data);
-    } else {
-      console.log("1단계 결과:", data);
-    }
-  };
-
-  // 공통 유틸: mark label → 이름 변환
-  const labelToName = (label) => {
-    const m = marks.find(mark => mark.label === label);
-    return m ? m.name : label;
-  };
-  const charToLabel = (char) => {
-    const m = marks.find(mark => mark.label.includes(char));
-    return m ? m.label : char;
-  };
-  // 학번(예: "4101") 끝 2자리 → 번호(예: 1)
-  const getStudentNumber = () => {
-    if (!user) return '';
-    const last2 = String(user.id).slice(-2);
-    const n = parseInt(last2, 10);
-    return isNaN(n) ? user.id : n;
-  };
-
-  // 2단계 결과 저장 (s1Results 사용)
-  const saveStep1ToSheet = (step1Results) => {
-    if (!user) return;
-    const correctNames = step1Results.correct.map(labelToName).join(', ');
-    const missedNames  = step1Results.missed.map(labelToName).join(', ');
-    const correctCount = step1Results.correct.length;
-    const total        = correctCount + step1Results.missed.length;
-    const accuracy     = total > 0 ? Math.round(correctCount / total * 100) + '%' : '';
-    const data = {
-      number:       getStudentNumber(),
-      name:         user.name,
-      correctMarks: correctNames || '없음',
-      missedMarks:  missedNames  || '없음',
-      accuracy:     accuracy
-    };
-    if (typeof google !== 'undefined') {
-      google.script.run
-        .withSuccessHandler(() => console.log("2단계 기록 저장 완료"))
-        .withFailureHandler(err => console.error("2단계 기록 저장 실패", err))
-        .saveStep1Result(data);
-    } else {
-      console.log("2단계 결과:", data);
-    }
-  };
-
-  // 3단계 결과 저장 (s2MissedPool + s2Quiz 사용)
-  const saveToSheet = (missedPool, quiz) => {
-    if (!user) return;
-    const missedLabels  = [...new Set(missedPool.flatMap(p => p.ans.map(charToLabel)))];
-    const correctLabels = [...new Set((quiz || []).flatMap(p => p.ans.map(charToLabel)))]
-      .filter(l => !missedLabels.includes(l));
-    const correctNames  = correctLabels.map(labelToName).join(', ');
-    const missedNames   = missedLabels.map(labelToName).join(', ');
-    const total         = (quiz || []).length;
-    const correctCount  = total - missedPool.length;
-    const accuracy      = total > 0 ? Math.round(correctCount / total * 100) + '%' : '';
-    const data = {
-      number:       getStudentNumber(),
-      name:         user.name,
-      correctMarks: correctNames || '없음',
-      missedMarks:  missedNames  || '없음',
-      total:        total,
-      accuracy:     accuracy
-    };
-    if (typeof google !== 'undefined') {
-      google.script.run
-        .withSuccessHandler(() => console.log("3단계 기록 저장 완료"))
-        .withFailureHandler(err => console.error("3단계 기록 저장 실패", err))
-        .saveStep2Result(data);
-    } else {
-      console.log("3단계 결과:", data);
-    }
-  };
-
-  const s1Phase0Options = useMemo(() => {
-    if (stage !== 'step1' || s1SubStep !== 0) return [];
-    return [...marks].sort(() => Math.random() - 0.5);
-  }, [stage, s1Idx, s1SubStep]);
-
-  const s1Phase1Options = useMemo(() => {
-    if (stage !== 'step1' || s1SubStep !== 1) return [];
-    return [...marks].sort(() => Math.random() - 0.5);
-  }, [stage, s1Idx, s1SubStep]);
-
-  const trigger = (type = 'normal') => {
-    if (window.confetti) {
-      window.confetti({
-        particleCount: type === 'big' ? 180 : 100,
-        spread: type === 'big' ? 90 : 70,
-        origin: { y: 0.6 },
-        colors: ['#FF6B00', '#FFD43B', '#FF87B2', '#6366F1']
+      setStep(function (s) {
+        return Math.max(0, s - 1);
+      });
+      setProg(function (p) {
+        return Math.max(0, p - 100 / 7);
       });
     }
-  };
-
-  // ───────────── VIEWS ─────────────
-  let view;
-
-  if (stage === 'landing') {
-    view = e('div', { className: 'h-full w-full flex flex-col items-center justify-center p-4 relative' },
-      e(PencilFairy, { className: 'mb-4', size: 100 }),
-      e('div', { className: 'badge-capsule mb-6' }, "국어 1-2학년군"),
-      e('h1', { className: 'text-7xl text-[#2D346E] mb-8 font-bold tracking-tight' }, "문장부호 스티커북"),
-      e('div', { className: 'relative max-w-6xl w-full mb-10' },
-        e('div', { className: 'absolute -top-5 left-1/2 -translate-x-1/2 z-20' },
-          e('div', { className: 'bg-[#FF6B00] text-white px-8 py-2 rounded-[20px] flex items-center gap-2 shadow-lg' },
-            e(Icon, { name: 'volume', size: 20, className: 'text-white' }),
-            e('span', { className: 'text-2xl font-bold' }, "오늘의 공부 약속")
-          )
-        ),
-        e('div', { className: 'bg-white/70 backdrop-blur-sm border-8 border-white/50 rounded-[35px] p-12 shadow-xl text-center' },
-          e('p', { className: 'text-[36px] text-[#2D346E] font-bold leading-tight text-center whitespace-pre-wrap' },
-            renderMix("\u201c문장부호의 이름과 쓰임을 알고,\n알맞은 문장부호를 사용하여 문장을 완성해 봅시다!\u201d")
-          )
-        )
-      ),
-      e('button', { onClick: () => setStage('reg'), className: 'btn-cute btn-orange py-6 px-32 text-5xl font-bold flex items-center gap-4' },
-        "활동 시작!", e(Icon, { name: 'chevronRight', size: 40, className: 'text-white' })
-      )
-    );
-
-  } else if (stage === 'reg') {
-    view = e('div', { className: 'h-full w-full flex flex-col items-center justify-center p-8 bg-orange-50 relative' },
-      e('div', { className: 'sticker-card p-12 w-full max-w-2xl text-center shadow-2xl relative overflow-hidden' },
-        e('div', { className: 'absolute -top-10 -right-10 w-40 h-40 bg-orange-100 rounded-full' }),
-        e('div', { className: 'relative z-10' },
-          e('div', { className: 'text-9xl mb-8' }, "👋"),
-          e('h2', { className: 'text-6xl font-black text-[#2D346E] mb-4' }, "내 이름을 알려줘!"),
-          e('p', { className: 'text-2xl text-slate-400 mb-12 font-bold' }, "명단에서 내 이름을 찾아보세요."),
-          loadingStudents
-            ? e('div', { className: 'p-10 text-3xl font-bold text-orange-500 loading-dots' }, "학생 명단을 불러오는 중")
-            : (students && students.length > 0)
-              ? e('div', { className: 'relative group mb-12' },
-                e('select', {
-                  className: 'w-full p-6 text-3xl rounded-3xl border-4 border-orange-100 outline-none text-[#2D346E] appearance-none text-center bg-white cursor-pointer shadow-lg hover:border-orange-300 transition-colors',
-                  value: selectedStudent ? selectedStudent.name : '',
-                  onChange: (ev) => {
-                    const s = students.find(x => x.name === ev.target.value);
-                    setSelectedStudent(s || null);
-                  }
-                },
-                  e('option', { value: '' }, "이름 선택"),
-                  students.map(s => e('option', { key: `${s.id}-${s.name}`, value: s.name }, `${s.id ? s.id + '번 ' : ''}${s.name}`))
-                ),
-                e('div', { className: 'absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-orange-400' }, e(Icon, { name: 'chevronDown', size: 32 }))
-              )
-              : e('div', { className: 'p-10 text-2xl text-slate-400 font-bold' }, "명단을 불러올 수 없습니다."),
-          e('button', {
-            disabled: !selectedStudent,
-            onClick: () => { setUser(selectedStudent); setStage('menu'); },
-            className: `w-full btn-cute bg-orange-500 text-white py-8 text-5xl font-bold border-none ${!selectedStudent ? 'opacity-50 grayscale scale-95' : ''}`
-          }, "출발!")
-        )
-      )
-    );
-
-  } else if (stage === 'menu') {
-    const isStudyCleared = learned.length === marks.length;
-    view = e('div', { className: 'h-full w-full flex flex-col items-center justify-center p-4 pt-16 relative overflow-hidden' },
-      e('div', { className: 'absolute top-4 left-4 flex gap-4' },
-        user && e('div', { className: 'bg-white border-2 border-orange-200 px-6 py-2 rounded-full font-bold flex items-center gap-2 shadow-md' },
-          e(Icon, { name: 'user', size: 24, className: 'text-orange-400' }),
-          e('span', { className: 'text-2xl text-[#2D346E]' }, user.name)
-        )
-      ),
-      e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl' },
-        e('button', {
-          onClick: () => { setStudyIdx(0); setStage('study'); },
-          className: 'sticker-card p-10 text-center flex flex-col items-center gap-6 group transition-all relative'
-        },
-          isStudyCleared && e('div', { className: 'absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-blue-400 text-white px-5 py-2 rounded-full font-bold text-xl shadow-lg flex items-center gap-2 whitespace-nowrap z-10' }, "🏆 완료!"),
-          e('div', { className: 'bg-blue-50 p-8 rounded-full text-blue-500 sparkle-icon' }, e(Icon, { name: 'book', size: 80 })),
-          e('div', null,
-            e('span', { className: 'block text-3xl font-bold text-blue-500' }, "1단계"),
-            e('span', { className: 'block text-4xl font-bold text-[#2D346E] mt-1' }, "기초탄탄"),
-            e('span', { className: 'block text-2xl text-slate-400 mt-3' }, "부호 개념 배우기")
-          )
-        ),
-        e('button', {
-          onClick: () => {
-            setS1Quiz([...marks].sort(() => Math.random() - 0.5));
-            setS1Idx(0); setS1SubStep(0);
-            setS1Results({ correct: [], missed: [] });
-            setStage('step1');
-          },
-          className: 'sticker-card p-10 text-center flex flex-col items-center gap-6 group transition-all relative'
-        },
-          isStep1Cleared && e('div', { className: 'absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-orange-400 text-white px-5 py-2 rounded-full font-bold text-xl shadow-lg flex items-center gap-2 whitespace-nowrap z-10' }, "🏆 완료!"),
-          e('div', { className: 'bg-orange-50 p-8 rounded-full text-orange-500 sparkle-icon' }, e(Icon, { name: 'help', size: 80 })),
-          e('div', null,
-            e('span', { className: 'block text-3xl font-bold text-orange-500' }, "2단계"),
-            e('span', { className: 'block text-4xl font-bold text-[#2D346E] mt-1' }, "문장부호와 쓰임"),
-            e('span', { className: 'block text-2xl text-slate-400 mt-3' }, "부호 이름, 쓰임 찾기")
-          )
-        ),
-        e('button', {
-          onClick: () => { setShowS2Config(true); setS2Results({ correct: [], missed: [] }); },
-          className: 'sticker-card p-10 text-center flex flex-col items-center gap-6 group transition-all relative'
-        },
-          isStep2Cleared && e('div', { className: 'absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-amber-400 text-white px-5 py-2 rounded-full font-bold text-xl shadow-lg flex items-center gap-2 whitespace-nowrap z-10' }, "🏆 완료!"),
-          e('div', { className: 'bg-yellow-50 p-8 rounded-full text-yellow-500 sparkle-icon' }, e(Icon, { name: 'star', size: 80 })),
-          e('div', null,
-            e('span', { className: 'block text-3xl font-bold text-yellow-500' }, "3단계"),
-            e('span', { className: 'block text-4xl font-bold text-[#2D346E] mt-1' }, "문장부호 완성하기"),
-            e('span', { className: 'block text-2xl text-slate-400 mt-3' }, "문장 완성하기")
-          )
-        )
-      )
-    );
-
-  } else if (stage === 'study') {
-    const isAllLearned = learned.length === marks.length;
-    view = e('div', { className: 'h-full w-full flex flex-col items-center justify-center p-8 pt-4 overflow-hidden relative' },
-      e('div', { className: 'w-full flex items-center gap-6 mb-6' },
-        e('div', { className: 'flex items-center gap-3 shrink-0' },
-          e('button', {
-            onClick: () => setStage('menu'),
-            className: 'btn-cute btn-orange w-14 h-14 flex items-center justify-center border-2 border-white shadow-sm'
-          }, e(Icon, { name: 'home', size: 28 })),
-          e('div', { className: 'text-3xl font-bold text-[#2D346E] whitespace-nowrap' }, "1단계: 기초탄탄")
-        ),
-        e('div', { className: 'flex-1 flex flex-col gap-1 min-w-0' },
-          e('div', { className: 'flex justify-between items-end' },
-            e('span', { className: 'text-xl font-bold text-orange-600' }, "진행도"),
-            e('span', { className: 'text-xl font-bold text-orange-600' }, `${learned.length} / ${marks.length} 공부 완료`)
-          ),
-          e('div', { className: 'w-full h-5 bg-slate-200 rounded-full overflow-hidden border-2 border-white shadow-inner' },
-            e('div', { className: 'h-full bg-orange-400 transition-all duration-500', style: { width: `${(learned.length / marks.length) * 100}%` } })
-          )
-        ),
-        user && e('div', { className: 'bg-white border-2 border-orange-200 px-5 py-2 rounded-full font-bold flex items-center gap-2 shadow-md shrink-0' },
-          e(Icon, { name: 'user', size: 22, className: 'text-orange-400' }),
-          e('span', { className: 'text-2xl text-[#2D346E]' }, user.name)
-        )
-      ),
-      e('div', { className: 'text-center mb-8' },
-        e('p', { className: 'text-4xl font-bold text-blue-500 animate-pulse' }, "각 문장부호를 선택해 예시를 확인해보세요")
-      ),
-      e('div', { className: 'grid grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-5xl flex-1 items-center pb-8' },
-        marks.map((m) => {
-          const isMarkLearned = learned.includes(m.label);
-          return e('button', {
-            key: m.label, onClick: () => setActiveMark(m),
-            className: `sticker-card p-6 flex flex-col items-center gap-3 hover:scale-105 active:scale-95 transition-transform group relative ${isMarkLearned ? 'bg-orange-50/50' : ''}`
-          },
-            isMarkLearned && e('div', { className: 'absolute top-4 right-4 bg-green-500 text-white p-1 rounded-full shadow-lg' }, e(Icon, { name: 'check', size: 24 })),
-            e('div', { className: `w-28 h-28 rounded-full flex items-center justify-center font-bold ${m.color} text-[64px] group-hover:rotate-12 transition-transform ${isMarkLearned ? 'opacity-60' : ''}` },
-              renderMix(m.label)
-            ),
-            e('span', { className: `text-3xl font-bold ${isMarkLearned ? 'text-slate-400' : 'text-[#2D346E]'}` }, m.name)
-          );
-        })
-      ),
-      isAllLearned && e('div', { className: 'absolute bottom-8 left-1/2 -translate-x-1/2' },
-        e('button', { onClick: () => setStudyFeedback(true), className: 'btn-cute btn-orange py-6 px-16 text-4xl font-bold shadow-2xl flex items-center gap-4 animate-bounce' },
-          "공부 완료! 넘어가기", e(Icon, { name: 'chevronRight', size: 40 })
-        )
-      )
-    );
-
-  } else if (stage === 'step1' && s1Quiz[s1Idx]) {
-    const p = s1Quiz[s1Idx];
-    const progress = (s1Idx / s1Quiz.length) * 100;
-    const header = e('div', { className: 'w-full max-w-5xl mb-4 space-y-4' },
-      e('div', { className: 'w-full flex items-center gap-6' },
-        e('div', { className: 'flex items-center gap-3 shrink-0' },
-          e('button', {
-            onClick: () => setStage('menu'),
-            className: 'btn-cute btn-orange w-14 h-14 flex items-center justify-center border-2 border-white shadow-sm'
-          }, e(Icon, { name: 'home', size: 28 })),
-          e('div', { className: 'text-3xl font-bold text-[#2D346E] whitespace-nowrap' }, "2단계: 문장부호와 쓰임")
-        ),
-        e('div', { className: 'flex-1 flex flex-col gap-1 min-w-0' },
-          e('div', { className: 'flex justify-between items-end' },
-            e('span', { className: 'text-xl font-bold text-orange-600' }, "진행도"),
-            e('span', { className: 'text-xl font-bold text-orange-600' }, `${s1Idx} / ${s1Quiz.length} 완료`)
-          ),
-          e('div', { className: 'w-full h-5 bg-slate-200 rounded-full overflow-hidden border-2 border-white shadow-inner' },
-            e('div', { className: 'h-full bg-orange-400 transition-all duration-500', style: { width: `${progress}%` } })
-          )
-        ),
-        user && e('div', { className: 'bg-white border-2 border-orange-200 px-5 py-2 rounded-full font-bold flex items-center gap-2 shadow-md shrink-0' },
-          e(Icon, { name: 'user', size: 22, className: 'text-orange-400' }),
-          e('span', { className: 'text-2xl text-[#2D346E]' }, user.name)
-        )
-      ),
-      e('div', { className: 'sticker-card p-4 border-4 border-white shadow-sm flex flex-col items-center' },
-        e('div', { className: 'example-bubble !text-5xl !bg-transparent border-none shadow-none !mb-0 !py-4' }, renderMix(p.examples[0], p.label))
-      ),
-      s1SubStep > 0 && e('div', { className: 'flex flex-wrap gap-4 justify-center items-center' },
-        e('div', { className: 'bg-blue-50 text-blue-600 px-8 py-3 rounded-full text-3xl font-bold border-2 border-blue-200 shadow-sm flex items-center gap-3' }, e(Icon, { name: 'check', size: 24 }), p.name)
-      )
-    );
-
-    if (s1SubStep === 0) {
-      view = e('div', { className: 'h-full w-full flex flex-col items-center justify-start p-4 pt-6' },
-        header,
-        e('div', { className: 'max-w-5xl w-full text-center break-keep' },
-          e('p', { className: 'text-4xl text-blue-500 mb-8 font-bold' },
-            "문장을 보고 ", e('span', { className: 'text-red-500' }, "빨간색"), " 문장부호의 이름을 골라보세요!"
-          ),
-          e('div', { className: 'grid grid-cols-2 md:grid-cols-3 gap-6' },
-            s1Phase0Options.map(m => e('button', {
-              key: m.label,
-              onClick: () => {
-                if (m.label === p.label) { trigger(); setS1SubStep(1); }
-                else setS1Wrong({ message: `'${m.name}'는 ${m.label} 에요.\n\n문장 속 빨간색 부호를\n다시 한번 볼까요?` });
-              },
-              className: 'sticker-card p-8 text-4xl font-bold hover:bg-blue-50 active:scale-95 transition-all text-[#2D346E] shadow-lg border-2 border-transparent hover:border-blue-200'
-            }, m.name))
-          )
-        )
-      );
-    } else if (s1SubStep === 1) {
-      view = e('div', { className: 'h-full w-full flex flex-col items-center justify-start p-4 pt-6' },
-        header,
-        e('div', { className: 'max-w-6xl w-full text-center break-keep' },
-          e('p', { className: 'text-4xl text-orange-400 mb-8 font-bold' }, "이 부호의 알맞은 쓰임을 골라보세요!"),
-          e('div', { className: 'grid grid-cols-2 gap-6' },
-            s1Phase1Options.map(m => e('button', {
-              key: m.label,
-              onClick: () => {
-                if (m.label === p.label) {
-                  trigger();
-                  setS1Feedback(true);
-                  setCollected(prev => [...new Set([...prev, p.label])]);
-                  if (!isReviewMode) {
-                    setS1Results(prev => {
-                      if (prev.missed.includes(p.label)) return prev;
-                      if (prev.correct.includes(p.label)) return prev;
-                      return { ...prev, correct: [...prev.correct, p.label] };
-                    });
-                  }
-                } else {
-                  setS1Wrong({ type: 'meaning', meaning: m.meaning, keyword: m.keyword, name: m.name, label: m.label });
-                  if (!isReviewMode) {
-                    setS1Results(prev => ({
-                      correct: prev.correct.filter(l => l !== p.label),
-                      missed: prev.missed.includes(p.label) ? prev.missed : [...prev.missed, p.label]
-                    }));
-                  }
-                }
-              },
-              className: 'sticker-card p-6 text-3xl font-bold hover:bg-orange-50 active:scale-95 transition-all text-[#2D346E] shadow-lg border-2 border-transparent hover:border-orange-200 whitespace-nowrap'
-            }, renderMeaning(m.meaning, m.keyword)))
-          )
-        )
-      );
-    }
-
-  } else if (stage === 'step2' && s2Quiz[s2Idx]) {
-    const p = s2Quiz[s2Idx];
-    const isReady = p && p.ans.every((a, i) => s2Answers[i] !== null);
-
-    view = e('div', { className: 'h-full w-full flex flex-col items-center justify-center p-4 relative' },
-      e('div', { className: 'w-full max-w-[1280px] flex items-center gap-6 mb-4' },
-        e('div', { className: 'flex items-center gap-3 shrink-0' },
-          e('button', {
-            onClick: () => setStage('menu'),
-            className: 'btn-cute btn-orange w-14 h-14 flex items-center justify-center border-2 border-white shadow-sm'
-          }, e(Icon, { name: 'home', size: 28 })),
-          e('div', { className: 'text-3xl font-bold text-[#2D346E] whitespace-nowrap' }, "3단계: 문장부호 완성하기")
-        ),
-        e('div', { className: 'flex-1 flex flex-col gap-1 min-w-0' },
-          e('div', { className: 'flex justify-between items-end' },
-            e('span', { className: 'text-xl font-bold text-orange-600' }, "진행도"),
-            e('span', { className: 'text-xl font-bold text-orange-600' }, `${s2Idx + 1} / ${s2Quiz.length} 문제`)
-          ),
-          e('div', { className: 'w-full h-5 bg-slate-200 rounded-full overflow-hidden border-2 border-white shadow-inner' },
-            e('div', { className: 'h-full bg-orange-400 transition-all duration-500', style: { width: `${((s2Idx + 1) / s2Quiz.length) * 100}%` } })
-          )
-        ),
-        e('button', { onClick: () => setShowS2Hint(true), className: 'btn-cute bg-yellow-50 text-yellow-600 py-2 px-5 text-xl font-bold flex items-center gap-2 border-2 border-yellow-100 shadow-sm hover:bg-yellow-100 shrink-0' },
-          e(Icon, { name: 'help', size: 22 }), "힌트 보기"
-        ),
-        user && e('div', { className: 'bg-white border-2 border-orange-200 px-5 py-2 rounded-full font-bold flex items-center gap-2 shadow-md shrink-0' },
-          e(Icon, { name: 'user', size: 22, className: 'text-orange-400' }),
-          e('span', { className: 'text-2xl text-[#2D346E]' }, user.name)
-        )
-      ),
-      e('div', { className: 'sticker-card p-12 mb-8 max-w-screen-xl w-full text-center' },
-        e('div', { className: 'text-6xl text-[#2D346E] font-bold text-center break-keep leading-[1.6] max-w-5xl mx-auto' },
-          p.textParts.map((part, idx) => e(React.Fragment, { key: idx },
-            part && e('span', { className: `${(p.ans.length > 1 && idx > 0 && idx < p.textParts.length - 1) ? 'text-[#FF6B00] bg-orange-50 px-8 rounded-full' : ''}` }, renderMix(part)),
-            idx < p.textParts.length - 1 && e(React.Fragment, null,
-              e('span', {
-                onClick: () => setS2ActiveHole(idx),
-                style: { display: 'inline-block', verticalAlign: 'middle', width: '80px', height: '80px', marginLeft: '4px', position: 'relative', overflow: 'hidden' },
-                className: `drop-zone cursor-pointer ${s2Answers[idx] ? 'drop-zone-filled' : ''} ${s2ActiveHole === idx ? 'border-orange-400 ring-8 ring-orange-100' : ''}`
-              }, s2Answers[idx]
-                ? (() => { const bp = getMarkPosition(s2Answers[idx]); return e('span', { style: { ...bp.markStyle, fontSize: '36px' } }, renderMix(s2Answers[idx])); })()
-                : ''
-              )
-            )
-          ))
-        )
-      ),
-      e('p', { className: 'text-4xl font-bold text-blue-500 mb-4' }, '⬇ 문장에 어울리는 문장부호를 골라 넣어 보세요!'),
-      e('div', { className: 'flex flex-wrap justify-center gap-6' },
-        ['.', ',', '?', '!', '\u201c', '\u201d', '\u2018', '\u2019'].map(label => {
-          const markInfo = marks.find(m => m.label.includes(label));
-          const colorClass = markInfo ? markInfo.color.split(' ')[0] : 'text-[#2D346E]';
-          const pos = getMarkPosition(label);
-          return e('button', {
-            key: label,
-            onClick: () => {
-              const newAnswers = [...s2Answers];
-              newAnswers[s2ActiveHole] = label;
-              setS2Answers(newAnswers);
-              // 다음 빈칸으로 이동
-              let nextHole = -1;
-              for (let h = 0; h < p.ans.length; h++) {
-                if (h !== s2ActiveHole && !newAnswers[h]) { nextHole = h; break; }
-              }
-              if (nextHole >= 0) { setS2ActiveHole(nextHole); }
-              // 모든 빈칸이 채워졌으면 자동 채점
-              const allFilled = newAnswers.every(a => a !== null);
-              if (allFilled) {
-                setTimeout(() => {
-                  const checkFlexible = (target, user) => {
-                    if (target === user) return true;
-                    if ((target === '.' || target === '!') && (user === '.' || user === '!')) return true;
-                    return false;
-                  };
-                  const isCorrect = p.ans.every((a, i) => checkFlexible(a, newAnswers[i]));
-                  const isExact = p.ans.every((a, i) => a === newAnswers[i]);
-                  setIsCorrectS2(isCorrect);
-                  setIsFlexibleMatch(isCorrect && !isExact);
-                  if (isCorrect) trigger();
-                  setS2Feedback(true);
-                }, 400);
-              }
-            },
-            className: `w-24 h-24 rounded-[30px] shadow-lg font-bold border-4 transition-all text-[40px] ${pos.buttonExtra} ${s2Answers[s2ActiveHole] === label ? 'border-orange-400 bg-orange-50' : 'border-white bg-white hover:bg-orange-50'}`
-          }, e('span', { className: colorClass, style: pos.markStyle }, renderMix(label)));
-        })
-      )
-    );
-
-  } else if (stage === 'results') {
-    const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-    const labelForChar = (char) => {
-      const m = marks.find(mm => mm.label.includes(char));
-      return m ? m.label : char;
-    };
-    // 2단계 결과: 라벨 그대로
-    const s1MissedLabels = [...new Set(s1Results.missed)];
-    const s1CorrectLabels = [...new Set(s1Results.correct)].filter(l => !s1MissedLabels.includes(l));
-    // 3단계 결과: ans 문자를 mark.label로 변환
-    const s2MissedLabels = [...new Set(s2Results.missed.flatMap(p => p.ans.map(labelForChar)))];
-    const s2CorrectLabels = [...new Set(s2Results.correct.flatMap(p => p.ans.map(labelForChar)))]
-      .filter(l => !s2MissedLabels.includes(l));
-
-    const renderMarkBoxes = (labels, color) => labels.length > 0
-      ? labels.map((m, i) => {
-          const firstChar = m.charAt(0);
-          const pos = m.length === 1 ? getMarkPosition(firstChar) : { buttonExtra: 'flex items-center justify-center', markStyle: {} };
-          return e('div', {
-            key: i,
-            className: `w-14 h-14 bg-white rounded-[15px] border-2 ${color} ${pos.buttonExtra} text-3xl font-black shadow-sm`
-          }, e('span', { style: pos.markStyle }, renderMix(m)));
-        })
-      : null;
-
-    const stageSection = (correctLabels, missedLabels) => e('div', { className: 'flex flex-col gap-2' },
-      e('div', { className: 'grid grid-cols-2 gap-4' },
-        e('div', { className: 'bg-[#E6FFFA] p-4 rounded-[30px] border-4 border-[#B2F5EA] min-h-[100px]' },
-          e('h4', { className: 'text-xl font-black text-[#2C7A7B] mb-2 flex items-center gap-2' },
-            e('span', { className: 'bg-[#38B2AC] text-white p-1 rounded-lg text-base' }, "✅"), "잘 아는 부호"
-          ),
-          e('div', { className: 'flex flex-wrap gap-2' },
-            renderMarkBoxes(correctLabels, 'border-[#38B2AC] text-[#2C7A7B]') ||
-              e('p', { className: 'text-lg text-[#4A5568] italic opacity-50' }, "아직 없어요")
-          )
-        ),
-        e('div', { className: 'bg-[#FFF5F5] p-4 rounded-[30px] border-4 border-[#FED7D7] min-h-[100px]' },
-          e('h4', { className: 'text-xl font-black text-[#C53030] mb-2 flex items-center gap-2' },
-            e('span', { className: 'bg-[#F56565] text-white p-1 rounded-lg text-base' }, "⚠️"), "더 학습할 부호"
-          ),
-          e('div', { className: 'flex flex-wrap gap-2' },
-            renderMarkBoxes(missedLabels, 'border-[#F56565] text-[#C53030]') ||
-              e('p', { className: 'text-lg text-[#4A5568] italic opacity-50 break-keep' }, "모두 한 번에 잘 맞혔어요! 👍")
-          )
-        )
-      )
-    );
-
-    const stageLabel = reportTarget === 'step1' ? '2단계: 문장부호와 쓰임' : '3단계: 문장부호 완성하기';
-    const stageColor = reportTarget === 'step1' ? 'text-[#E85D04]' : 'text-[#D69E2E]';
-
-    view = e('div', { className: 'h-full w-full flex flex-col items-center justify-center p-6 bg-[#FFF9F5] overflow-hidden' },
-      e('div', { className: 'max-w-5xl w-full flex flex-col gap-3' },
-        e('div', { className: 'text-center' },
-          e('div', { className: 'text-[60px] mb-1 animate-bounce' }, "🏆"),
-          e('h2', { className: 'text-6xl font-black text-[#E85D04] tracking-tight' }, `[${user ? user.name : "..."}] 학습 결과 보고서`)
-        ),
-        e('div', { className: 'grid grid-cols-[1fr_2fr_1fr] gap-4' },
-          e('div', { className: 'bg-[#EEF4FF] p-4 rounded-[30px] border-2 border-white shadow-sm text-center' },
-            e('p', { className: 'text-base font-bold text-[#A0C4FF] mb-1' }, "학습자 성명"),
-            e('p', { className: 'text-3xl font-black text-[#2D346E] whitespace-nowrap' }, user ? user.name : "친구")
-          ),
-          e('div', { className: 'bg-[#FFF5F0] p-4 rounded-[30px] border-2 border-white shadow-sm text-center' },
-            e('p', { className: 'text-base font-bold text-[#FFB5A7] mb-1' }, "학습 단계"),
-            e('p', { className: `text-3xl font-black ${stageColor} whitespace-nowrap` }, stageLabel)
-          ),
-          e('div', { className: 'bg-[#FEFAE0] p-4 rounded-[30px] border-2 border-white shadow-sm text-center' },
-            e('p', { className: 'text-base font-bold text-[#D4D1A0] mb-1' }, "학습한 날짜"),
-            e('p', { className: 'text-3xl font-black text-[#606C38] whitespace-nowrap' }, today)
-          )
-        ),
-        reportTarget === 'step1'
-          ? stageSection(s1CorrectLabels, s1MissedLabels)
-          : stageSection(s2CorrectLabels, s2MissedLabels),
-        (() => {
-          const currentMissedLabels = reportTarget === 'step1' ? s1MissedLabels : s2MissedLabels;
-          const hasMissed = currentMissedLabels.length > 0;
-          const canNavigate = !hasMissed || hasReviewedMissed;
-          return e('div', { className: 'flex gap-4' },
-            e('button', {
-              onClick: () => { if (canNavigate) { setStage('menu'); trigger('big'); } },
-              disabled: !canNavigate,
-              className: `flex-1 btn-cute bg-slate-200 text-slate-600 py-4 text-2xl font-bold border-none shadow-md ${canNavigate ? 'hover:bg-slate-300' : 'opacity-40 grayscale cursor-not-allowed'}`
-            }, "메인 메뉴로"),
-            hasMissed && e('button', {
-              onClick: () => {
-                setShowNotebookPractice(true);
-              },
-              className: 'flex-[2] btn-cute bg-[#E85D04] text-white py-4 text-2xl font-bold border-none shadow-md hover:brightness-110 shadow-orange-200'
-            }, "✏️ 틀린 문제 복습하기")
-          );
-        })()
-      )
-    );
   }
-
-  // ───────────── MODALS ─────────────
-  let modal = null;
-
-  if (activeMark) {
-    modal = e('div', { className: 'fixed inset-0 bg-black/60 flex items-center justify-center z-[300] backdrop-blur-md p-4' },
-      e('div', { className: 'sticker-card p-8 md:p-12 max-w-6xl w-full shadow-2xl relative overflow-hidden flex flex-col md:flex-row gap-8 animate-in fade-in zoom-in duration-300' },
-        e('button', { onClick: () => setActiveMark(null), className: 'absolute top-6 right-6 text-slate-300 hover:text-slate-500' }, e(Icon, { name: 'x', size: 40 })),
-        e('div', { className: 'w-full md:w-1/4 flex flex-col items-center justify-center bg-orange-50 rounded-[40px] p-6 space-y-4' },
-          e(PencilFairy, { size: 160 }),
-          e('div', { className: 'text-center' },
-            e('div', { className: `inline-flex w-32 h-32 rounded-full bg-white items-center justify-center font-bold ${activeMark.color} text-[80px] border-8 border-white shadow-xl mb-4` }, renderMix(activeMark.label)),
-            e('h4', { className: 'text-5xl font-bold text-[#2D346E]' }, activeMark.name)
-          )
-        ),
-        e('div', { className: 'w-full md:w-3/4 flex flex-col' },
-          e('div', { className: 'bg-white p-8 rounded-[35px] border-4 border-orange-100 mb-8' },
-            e('p', { className: 'text-4xl text-[#2D346E] font-bold leading-tight' }, renderMeaning(activeMark.meaning, activeMark.keyword))
-          ),
-          e('h5', { className: 'text-3xl font-bold text-orange-500 mb-4 flex items-center gap-2' }, e(Icon, { name: 'check', size: 32 }), "이럴 때 사용해요!"),
-          e('div', { className: 'flex-1 overflow-y-auto hide-scrollbar space-y-4 pr-2' },
-            activeMark.examples.slice(0, 3).map((ex, idx) => e('div', { key: idx, className: 'example-bubble !text-3xl !mb-0' },
-              splitIntoSentences(ex).map((sent, sIdx) =>
-                e('div', { key: sIdx }, renderMix(sent, activeMark.label))
-              )
-            ))
-          ),
-          e('button', {
-            onClick: () => { if (!learned.includes(activeMark.label)) setLearned([...learned, activeMark.label]); setActiveMark(null); },
-            className: 'mt-8 btn-cute btn-orange py-6 text-4xl font-bold shadow-lg'
-          }, "알겠어요!")
-        )
-      )
-    );
-  } else if (studyFeedback) {
-    modal = e('div', { className: 'fixed inset-0 bg-black/60 flex items-center justify-center z-[400] backdrop-blur-md p-4' },
-      e('div', { className: 'sticker-card p-12 text-center max-w-2xl w-full shadow-2xl relative overflow-hidden' },
-        e('div', { className: 'text-[120px] mb-8 animate-bounce' }, "👑"),
-        e('h4', { className: 'text-6xl font-bold text-[#2D346E] mb-6' }, "최고예요!"),
-        e('p', { className: 'text-4xl text-slate-600 mb-12 leading-relaxed whitespace-pre-wrap' }, "모든 문장부호 개념을\n완벽하게 공부했어요!\n이제 퀴즈에 도전해 볼까요?"),
-        e('div', { className: 'flex flex-col gap-4' },
-          e('button', {
-            onClick: () => {
-              setStudyFeedback(false);
-              setS1Quiz([...marks].sort(() => Math.random() - 0.5));
-              setS1Idx(0); setS1Results({ correct: [], missed: [] });
-              setStage('step1'); trigger('big');
-              try { saveStudyToSheet(learned); } catch(e) { console.error('1단계 저장 오류:', e); }
-            },
-            className: 'btn-cute btn-orange py-8 text-5xl font-bold'
-          }, "2단계 시작하기!"),
-          e('button', { onClick: () => setStudyFeedback(false), className: 'text-3xl text-slate-400 font-bold py-4 hover:text-slate-600' }, "조금 더 둘러보기")
-        )
-      )
-    );
-  } else if (showS2Config) {
-    modal = e('div', { className: 'fixed inset-0 bg-black/60 flex items-center justify-center z-[300] backdrop-blur-sm p-4' },
-      e('div', { className: 'sticker-card p-12 text-center max-w-lg w-full shadow-2xl animate-in zoom-in duration-300' },
-        e('div', { className: 'bg-yellow-50 w-24 h-24 rounded-full flex items-center justify-center text-yellow-500 mx-auto mb-6' }, e(Icon, { name: 'star', size: 48 })),
-        e('h4', { className: 'text-5xl font-bold text-[#2D346E] mb-4' }, "3단계 설정"),
-        e('p', { className: 'text-2xl text-slate-500 mb-10' }, "풀어보고 싶은 문제의 수를 선택하세요."),
-        e('div', { className: 'flex gap-4 justify-center mb-12' },
-          [5, 10, 15].map(n => e('button', {
-            key: n, onClick: () => setS2Limit(n),
-            className: `w-20 h-20 rounded-[25px] text-3xl font-bold transition-all border-4 ${s2Limit === n ? 'bg-orange-500 text-white border-orange-600 scale-110 shadow-lg' : 'bg-white text-orange-400 border-orange-100 hover:bg-orange-50'}`
-          }, n))
-        ),
-        e('div', { className: 'flex gap-4' },
-          e('button', { onClick: () => setShowS2Config(false), className: 'flex-1 btn-cute bg-slate-200 text-slate-600 py-6 text-3xl font-bold border-none' }, "취소"),
-          e('button', {
-            onClick: () => {
-              setShowS2Config(false);
-              const sourcePool = dynamicProblems.length > 0 ? dynamicProblems : problemsList;
-              let quiz;
-              if (s2Limit === 5) {
-                // 5문항 모드: 문장부호가 겹치지 않도록 그룹별로 1개씩 선택
-                const groups = {};
-                sourcePool.forEach(p => {
-                  const key = p.ans[0];
-                  if (!groups[key]) groups[key] = [];
-                  groups[key].push(p);
-                });
-                const uniquePicks = Object.values(groups).map(group =>
-                  group[Math.floor(Math.random() * group.length)]
-                );
-                quiz = uniquePicks.sort(() => Math.random() - 0.5).slice(0, 5);
-              } else {
-                quiz = [...sourcePool].sort(() => Math.random() - 0.5).slice(0, s2Limit);
-              }
-              setS2Quiz(quiz);
-              setS2Idx(0);
-              setS2Answers(new Array(quiz[0].ans.length).fill(null));
-              setS2ActiveHole(0);
-              setS2MissedPool([]);
-              setStage('step2');
-            },
-            className: 'flex-[2] btn-cute bg-orange-500 text-white py-6 text-3xl font-bold border-none'
-          }, "출발!")
-        )
-      )
-    );
-  } else if (showS2Hint) {
-    modal = e('div', { className: 'fixed inset-0 bg-black/60 flex items-center justify-center z-[500] backdrop-blur-md p-4' },
-      e('div', { className: 'sticker-card p-8 md:p-12 max-w-5xl w-full max-h-[95vh] shadow-2xl relative animate-in zoom-in duration-300 flex flex-col' },
-        e('button', { onClick: () => setShowS2Hint(false), className: 'absolute top-6 right-6 text-slate-300 hover:text-slate-500 z-10' }, e(Icon, { name: 'x', size: 40 })),
-        e('div', { className: 'flex-1 overflow-y-auto pr-2 hide-scrollbar' },
-          e('h4', { className: 'text-6xl font-bold text-[#2D346E] mb-8 text-center' }, "문장부호 힌트"),
-          e('div', { className: 'grid grid-cols-3 gap-6' },
-            marks.map(m => e('div', { key: m.name, className: 'flex flex-col items-center text-center gap-4 p-6 bg-slate-50 rounded-[40px] border-2 border-white shadow-sm' },
-              e('div', { className: `w-28 h-28 rounded-full bg-white flex items-center justify-center text-6xl font-bold ${m.color.split(' ')[0]} shadow-md` }, renderMix(m.label)),
-              e('div', null,
-                e('div', { className: 'text-4xl font-bold text-[#2D346E] mb-2' }, m.name),
-                e('div', { className: 'text-xl text-slate-500 font-bold leading-tight' }, renderMeaning(m.meaning, m.keyword))
-              )
-            ))
-          )
-        ),
-        e('button', { onClick: () => setShowS2Hint(false), className: 'mt-8 w-full btn-cute btn-orange py-6 text-4xl font-bold border-none shrink-0 shadow-lg' }, "알겠어요!")
-      )
-    );
-  } else if (s1Feedback && s1Quiz[s1Idx]) {
-    const p = s1Quiz[s1Idx];
-    modal = e('div', { className: 'fixed inset-0 bg-black/60 flex items-center justify-center z-[200] backdrop-blur-sm p-4' },
-      e('div', { className: 'sticker-card p-12 text-center max-w-4xl w-full shadow-2xl relative animate-in fade-in zoom-in duration-300' },
-        e('div', { className: 'text-7xl mb-6' }, "🎉 정답입니다!"),
-        e('div', { className: 'bg-orange-50 rounded-[40px] p-10 mb-10 border-4 border-orange-100' },
-          e('div', { className: `w-32 h-32 mx-auto rounded-full bg-white flex items-center justify-center font-bold ${p.color} text-[80px] shadow-lg mb-6 border-8 border-white` }, renderMix(p.label)),
-          e('h4', { className: 'text-6xl font-bold text-[#2D346E] mb-6' }, p.name),
-          e('div', { className: 'h-1 w-20 bg-orange-200 mx-auto mb-6 rounded-full' }),
-          e('p', { className: 'text-4xl text-slate-700 leading-tight font-bold break-keep' },
-            e(React.Fragment, null,
-              e('span', { className: 'punctuation-mark quote-serif' }, '\u201c'),
-              renderMeaning(p.meaning, p.keyword),
-              e('span', { className: 'punctuation-mark quote-serif' }, '\u201d')
-            )
-          )
-        ),
-        e('button', {
-          onClick: () => {
-            setS1Feedback(false); setS1SubStep(0);
-            if (s1Idx < s1Quiz.length - 1) { setS1Idx(s => s + 1); }
-            else {
-              setIsStep1Cleared(true);
-              setReportTarget('step1');
-              setHasReviewedMissed(isReviewMode);
-              setIsReviewMode(false);
-              setStage('results');
-              trigger('big');
-              if (!isReviewMode) { try { saveStep1ToSheet(s1Results); } catch(e) { console.error('저장 오류:', e); } }
-            }
-          },
-          className: 'w-full btn-cute btn-orange py-8 text-5xl font-bold'
-        }, s1Idx < s1Quiz.length - 1 ? "다음 문제" : "활동 완료!")
-      )
-    );
-  } else if (s1Wrong) {
-    modal = e('div', { className: 'fixed inset-0 bg-black/60 flex items-center justify-center z-[500] backdrop-blur-sm p-4' },
-      e('div', { className: 'sticker-card p-12 text-center max-w-4xl w-full shadow-2xl relative animate-in zoom-in duration-300' },
-        e('div', { className: 'text-[100px] mb-6' }, "💡"),
-        e('h4', { className: 'text-5xl font-bold text-blue-600 mb-8' }, "다시 생각해봐요!"),
-        e('div', { className: 'bg-blue-50 rounded-[40px] p-8 mb-10 border-4 border-blue-100' },
-          e('p', { className: 'text-4xl text-slate-700 leading-tight font-bold whitespace-pre-wrap break-keep' },
-            s1Wrong.type === 'meaning'
-              ? e(React.Fragment, null,
-                  e('span', { className: 'punctuation-mark quote-serif' }, '\u2018'),
-                  renderMeaning(String(s1Wrong.meaning || '').replace(/[.\s]+$/, ''), s1Wrong.keyword),
-                  e('span', { className: 'punctuation-mark quote-serif' }, '\u2019'),
-                  '는\n',
-                  e('span', { className: 'text-red-500' }, renderMix(`${s1Wrong.name}(${s1Wrong.label})`)),
-                  '에 대한 설명이에요.\n\n다른 설명을 골라보세요!'
-                )
-              : renderMix(s1Wrong.message)
-          )
-        ),
-        e('button', { onClick: () => setS1Wrong(null), className: 'w-full btn-cute bg-blue-500 text-white py-8 text-5xl font-bold border-none' }, "다시 고르기")
-      )
-    );
-  } else if (s2Feedback) {
-    const currentProb = s2Quiz[s2Idx];
-    modal = e('div', { className: 'fixed inset-0 bg-black/60 flex items-center justify-center z-[200] backdrop-blur-sm p-4' },
-      e('div', { className: 'sticker-card p-8 md:p-12 max-w-5xl w-full shadow-2xl relative overflow-hidden flex flex-col md:flex-row gap-8 animate-in zoom-in duration-300' },
-        e('div', { className: 'w-full md:w-1/3 flex flex-col items-center justify-center bg-orange-50 rounded-[40px] p-8 space-y-6' },
-          e(PencilFairy, { size: 140 }),
-          e('div', { className: 'text-center' },
-            e('div', { className: `text-[100px] mb-4 animate-bounce` }, isCorrectS2 ? (isFlexibleMatch ? "💡" : "✨") : "💡"),
-            e('h4', { className: `text-5xl font-bold ${isCorrectS2 ? (isFlexibleMatch ? 'text-yellow-500' : 'text-orange-600') : 'text-blue-500'} whitespace-pre-wrap` },
-              isCorrectS2 ? (isFlexibleMatch ? "거의\n완벽해요!" : "완벽해요!") : "다시\n해볼까?"
-            )
-          )
-        ),
-        e('div', { className: 'w-full md:w-2/3 flex flex-col justify-center' },
-          e('div', { className: 'bg-white p-8 rounded-[35px] border-4 border-orange-100 mb-8 flex-1 flex flex-col justify-center text-center' },
-            e('p', { className: 'text-4xl text-slate-600 leading-relaxed whitespace-pre-wrap font-bold break-keep' },
-              (() => {
-                if (!currentProb) return '';
-                const dedupeMarks = (labels) => {
-                  const out = [];
-                  const seen = new Set();
-                  labels.forEach(label => {
-                    const m = marks.find(mark => mark.label.includes(label));
-                    if (m && !seen.has(m.label)) {
-                      seen.add(m.label);
-                      out.push(m);
-                    }
-                  });
-                  return out;
-                };
-
-                if (isCorrectS2) {
-                  if (isFlexibleMatch) {
-                    const targetAns = currentProb.ans[0];
-                    const userAns   = s2Answers.find(a => a === '.' || a === '!') || targetAns;
-                    const targetMark = marks.find(m => m.label.includes(targetAns));
-                    const userMark   = marks.find(m => m.label.includes(userAns));
-                    return e(React.Fragment, null,
-                      "✅ 정답으로 인정해요!\n\n",
-                      renderMix(`'${userMark?.name}(${userAns})'`),
-                      "도 쓸 수 있지만,\n이 문장에는 ",
-                      renderMix(`'${targetMark?.name}(${targetAns})'`),
-                      "가 더 자연스러워요.\n\n",
-                      renderMix(`'${targetMark?.name}(${targetAns})'`),
-                      "는 ",
-                      renderMeaning(targetMark?.meaning, targetMark?.keyword)
-                    );
-                  }
-                  const usedMarks = dedupeMarks(currentProb.ans);
-                  return e(React.Fragment, null,
-                    "정말 참 잘했어요!\n\n",
-                    usedMarks.map((info, idx) => e(React.Fragment, { key: idx },
-                      idx > 0 && "\n\n",
-                      renderMix(`'${info.name}(${info.label})'는\n`),
-                      renderMeaning(info.meaning, info.keyword)
-                    ))
-                  );
-                } else {
-                  const selectedMarks = dedupeMarks(s2Answers.filter(a => a !== null));
-                  if (selectedMarks.length === 0) return renderMix(currentProb.hint || '');
-                  return e(React.Fragment, null,
-                    selectedMarks.map((info, idx) => e(React.Fragment, { key: idx },
-                      idx > 0 && "\n\n",
-                      renderMix(`'${info.name}(${info.label})'는\n`),
-                      renderMeaning(info.meaning, info.keyword)
-                    )),
-                    "\n\n다시 한번 생각해서 골라보세요!"
-                  );
-                }
-              })()
-            ),
-            // ── 틀렸을 때: 정답 문장부호를 10칸 공책에 표시 ──
-            !isCorrectS2 && currentProb && e('div', { className: 'mt-6 bg-blue-50 rounded-[20px] p-5 text-left' },
-              e('p', { className: 'text-2xl font-bold text-blue-600 mb-3' }, '✏️ 정답을 공책에 바르게 써 보세요!'),
-              (() => {
-                const correctChars = [...new Set(currentProb.ans)];
-                const cellSz = 52;
-                return correctChars.map((ch, cIdx) => {
-                  const mi = marks.find(m => m.label.includes(ch));
-                  const nm = mi ? mi.name : ch;
-                  const ps = getMarkPosition(ch);
-                  const cc = mi ? mi.color.split(' ')[0] : 'text-[#2D346E]';
-                  return e('div', { key: cIdx, className: 'mb-2' },
-                    e('p', { className: 'text-xl font-bold text-slate-600 mb-1' }, '📌 ', e('span', { className: 'text-[#E85D04]' }, `${nm}(${ch})`)),
-                    e('div', { style: { display: 'inline-flex', border: '2px solid #94a3b8', borderRadius: '6px', overflow: 'hidden' } },
-                      Array.from({ length: 10 }, (_, i) =>
-                        e('div', { key: i, style: { width: cellSz, height: cellSz, position: 'relative', borderRight: i < 9 ? '1px solid #b0b8c4' : 'none' } },
-                          e('div', { style: { position: 'absolute', top: 0, bottom: 0, left: '50%', borderLeft: '1px dashed #cbd5e1' } }),
-                          e('div', { style: { position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px dashed #cbd5e1' } }),
-                          i < 2 && e('span', { className: cc, style: { ...(ps ? ps.markStyle : {}), fontSize: '22px', fontWeight: 'bold' } }, renderMix(ch))
-                        )
-                      )
-                    )
-                  );
-                });
-              })()
-            )
-          ),
-          e('button', {
-            onClick: () => {
-              setS2Feedback(false);
-              if (!currentProb) return;
-              const probKey = currentProb.textParts.join('|');
-              const isProbSame = (p) => p.textParts.join('|') === probKey;
-
-              if (isCorrectS2) {
-                const isAlreadyMissed = s2Results.missed.some(isProbSame) || s2MissedPool.some(isProbSame);
-                if (!isReviewMode) {
-                  if (isAlreadyMissed) {
-                    if (!s2Results.missed.find(isProbSame)) setS2Results(prev => ({ ...prev, missed: [...prev.missed, currentProb] }));
-                  } else {
-                    if (!s2Results.correct.find(isProbSame)) setS2Results(prev => ({ ...prev, correct: [...prev.correct, currentProb] }));
-                  }
-                }
-                if (s2Idx < s2Quiz.length - 1) {
-                  const nextProb = s2Quiz[s2Idx + 1];
-                  setS2Idx(i => i + 1);
-                  setS2Answers(new Array(nextProb.ans.length).fill(null));
-                  setS2ActiveHole(0);
-                } else {
-                  if (!isReviewMode) { setTimeout(() => saveToSheet(s2MissedPool, s2Quiz), 100); }
-                  setIsStep2Cleared(true);
-                  setReportTarget('step2');
-                  setHasReviewedMissed(isReviewMode);
-                  setIsReviewMode(false);
-                  setStage('results');
-                }
-              } else {
-                if (!s2MissedPool.find(isProbSame)) setS2MissedPool(prev => [...prev, currentProb]);
-                if (!isReviewMode && !s2Results.missed.find(isProbSame)) {
-                  setS2Results(prev => ({ ...prev, missed: [...prev.missed, currentProb], correct: prev.correct.filter(p => !isProbSame(p)) }));
-                }
-                setS2Answers(new Array(currentProb.ans.length).fill(null));
-                setS2ActiveHole(0);
-              }
-            },
-            className: `w-full btn-cute py-8 text-4xl font-bold text-white shadow-lg ${isCorrectS2 ? 'btn-orange' : 'bg-blue-500'}`
-          }, isCorrectS2 ? (s2Idx < s2Quiz.length - 1 ? "다음 문제" : "결과 확인하기") : "다시 생각하기")
-        )
-      )
-    );
+  function pickCard(card) {
+    if (flipped) return;
+    setFlipped(card);
   }
-
-  // ───────────── 10칸 공책 복습 화면 ─────────────
-  const notebookModal = showNotebookPractice && (() => {
-    const currentMissedLabels = reportTarget === 'step1' ? s1MissedLabels : s2MissedLabels;
-    const rows = [];
-    currentMissedLabels.forEach(label => {
-      const markInfo = marks.find(m => m.label === label);
-      const name = markInfo ? markInfo.name : label;
-      const chars = [];
-      for (const ch of label) { if (ch.trim()) chars.push(ch); }
-      rows.push({ name, label: label.trim(), chars });
+  function confirmCard() {
+    var c = flipped;
+    setDrawn(c);
+    var p = {};
+    p[c.key] = c.value;
+    setParts(function (prev) {
+      return Object.assign({}, prev, p);
     });
-    const cellSz = 72;
-    const renderCell = (ch, idx) => {
-      const pos = ch ? getMarkPosition(ch) : null;
-      const mi = ch ? marks.find(m => m.label.includes(ch)) : null;
-      const cc = mi ? mi.color.split(' ')[0] : 'text-[#2D346E]';
-      return e('div', { key: idx, style: { width: cellSz, height: cellSz, position: 'relative', borderRight: '1px solid #94a3b8', flexShrink: 0 } },
-        e('div', { style: { position: 'absolute', top: 0, bottom: 0, left: '50%', borderLeft: '1px dashed #cbd5e1' } }),
-        e('div', { style: { position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px dashed #cbd5e1' } }),
-        ch && e('span', { className: cc, style: { ...(pos ? pos.markStyle : {}), fontSize: '28px', fontWeight: 'bold' } }, renderMix(ch))
-      );
+    setSub(0);
+    setShowInst(true);
+  }
+  function subDone(val) {
+    if (!val) return;
+    var k = activeOpts[sub].key;
+    var p = {};
+    p[k] = val;
+    setParts(function (prev) {
+      return Object.assign({}, prev, p);
+    });
+    setInterim("");
+    if (sub < activeOpts.length - 1) {
+      setSub(function (s) {
+        return s + 1;
+      });
+      setProg(function (p) {
+        return p + 4;
+      });
+    } else goNext();
+  }
+  function toggleListen() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      alert("Chrome을 사용해 주세요!");
+      return;
+    }
+    if (!recRef.current) {
+      var r = new SR();
+      r.lang = 'ko-KR';
+      r.interimResults = true;
+      r.continuous = true;
+      r.onstart = function () {
+        setListening(true);
+      };
+      r.onresult = function (e) {
+        var s = "";
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+          if (!e.results[i].isFinal) s += e.results[i][0].transcript;
+        }
+        setInterim(s);
+      };
+      r.onend = function () {
+        setListening(false);
+      };
+      r.onerror = function () {
+        setListening(false);
+      };
+      recRef.current = r;
+    }
+    if (listening) recRef.current.stop();else {
+      try {
+        recRef.current.start();
+      } catch (e) {}
+    }
+  }
+  function saveToSheet() {
+    setIsSaving(true);
+    setSaveStatus(null);
+    var cf = feelings.map(function (f) {
+      return f.label;
+    }).join(", ");
+    var cd = parts.when + " " + parts.where + " " + parts.who + " " + parts.what + ". " + extra + " " + feelReason;
+    var payload = {
+      id: selectedId,
+      nickname: nickname,
+      when: parts.when,
+      where: parts.where,
+      who: parts.who,
+      what: parts.what,
+      additionalStory: extra,
+      feelingReason: feelReason,
+      feeling: cf,
+      diaryText: cd.trim(),
+      evaluation1: eval_.q1 > 0 ? "⭐".repeat(eval_.q1) : "미평가",
+      evaluation2: eval_.q2 > 0 ? "⭐".repeat(eval_.q2) : "미평가"
     };
-    return e('div', { className: 'fixed inset-0 z-[800] flex items-center justify-center', style: { background: 'rgba(0,0,0,0.5)' } },
-      e('div', { className: 'bg-white rounded-[40px] p-10 max-w-5xl w-full shadow-2xl' },
-        e('h2', { className: 'text-5xl font-black text-[#E85D04] text-center mb-3' }, '✏️ 공책에 바르게 써 보세요!'),
-        e('p', { className: 'text-2xl text-slate-500 text-center mb-8 whitespace-pre-wrap' },
-          '아래 보기를 잘 보고, 공책에 따라 써 보세요.\n문장부호가 칸 안에서 어디에 위치하는지 확인하고 같은 자리에 써 보세요.'
-        ),
-        e('div', { className: 'space-y-6 mb-8' },
-          rows.map((row, rIdx) => e('div', { key: rIdx },
-            e('p', { className: 'text-2xl font-bold text-[#2D346E] mb-2 flex items-center gap-2' },
-              '📌 ', e('span', { className: 'text-[#E85D04]' }, renderMix(`${row.name}(${row.label})`))
-            ),
-            e('div', { style: { display: 'inline-flex', border: '2px solid #64748b', borderRadius: '10px', overflow: 'hidden' } },
-              Array.from({ length: 10 }, (_, cIdx) => {
-                const exCount = Math.min(row.chars.length, 2);
-                if (cIdx < exCount) return renderCell(row.chars[cIdx % row.chars.length], cIdx);
-                if (row.chars.length > 1 && cIdx < row.chars.length) return renderCell(row.chars[cIdx], cIdx);
-                return renderCell(null, cIdx);
-              })
-            )
-          ))
-        ),
-        e('button', {
-          onClick: () => { setShowNotebookPractice(false); setHasReviewedMissed(true); },
-          className: 'w-full btn-cute btn-orange py-6 text-4xl font-bold border-none'
-        }, '완료했어요! ✨')
-      )
-    );
-  })();
-
-  // ───────────── TUTORIALS ─────────────
-  let tutorials = null;
-  if (stage === 'step1' && !viewedTutorials.includes('step1')) {
-    tutorials = e(TutorialPopup, { type: 'step1', onClose: () => setViewedTutorials([...viewedTutorials, 'step1']) });
-  } else if (stage === 'step2' && !viewedTutorials.includes('step2')) {
-    tutorials = e(TutorialPopup, { type: 'step2', onClose: () => setViewedTutorials([...viewedTutorials, 'step2']) });
+    if (isGasOk) {
+      fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }).then(function () {
+        setSaveStatus('success');
+        setTimeout(function () {
+          setSaveStatus(null);
+        }, 4000);
+      }).catch(function () {
+        setSaveStatus('error');
+      }).finally(function () {
+        setIsSaving(false);
+      });
+    } else {
+      console.log(payload);
+      setTimeout(function () {
+        setSaveStatus('success');
+        setTimeout(function () {
+          setSaveStatus(null);
+        }, 4000);
+        setIsSaving(false);
+      }, 800);
+    }
+  }
+  function saveImg() {
+    if (!window.html2canvas || !cardRef.current) return;
+    setIsCapture(true);
+    window.html2canvas(cardRef.current, {
+      scale: 2,
+      backgroundColor: '#ffffff'
+    }).then(function (c) {
+      var a = document.createElement('a');
+      a.href = c.toDataURL("image/png");
+      a.download = nickname + "_일기.png";
+      a.click();
+      setIsCapture(false);
+    });
+  }
+  function reset() {
+    stopListen();
+    setStep(2);
+    setNickname("");
+    setSelectedId("");
+    setProg(0);
+    setParts({
+      when: "",
+      where: "",
+      who: "",
+      what: ""
+    });
+    setSub(0);
+    setExtra("");
+    setFeelings([]);
+    setFeelReason("");
+    setEval({
+      q1: 0,
+      q2: 0
+    });
+    setSaved(false);
+    setInterim("");
+    setSaveStatus(null);
+    setDrawn(null);
+    setFlipped(null);
   }
 
-  return e('div', { className: 'h-full w-full relative' },
-    view || e('div', { className: 'h-full flex items-center justify-center text-slate-400' }, '잠시만 기다려주세요...'),
-    modal,
-    tutorials,
-    notebookModal
-  );
-};
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(e(App));
-}; // window.onload
-</script>
-</body>
-</html>
+  // Diary parts bar
+  var DPBar = React.createElement("div", {
+    className: "bg-orange-100 py-4 px-12 rounded-[2.5rem] shadow-xl border-2 border-orange-200 flex flex-col items-center gap-2 shrink-0"
+  }, React.createElement("div", {
+    className: "grid grid-cols-4 w-full gap-4 border-b border-orange-200/50 pb-2"
+  }, ['언제', '어디에서', '누구와', '무엇을'].map(function (l) {
+    return React.createElement("div", {
+      key: l,
+      className: "text-center text-xl font-black text-orange-600"
+    }, l);
+  })), React.createElement("div", {
+    className: "grid grid-cols-4 w-full gap-4"
+  }, [parts.when, parts.where, parts.who, parts.what].map(function (v, i) {
+    return React.createElement("div", {
+      key: i,
+      className: "text-center text-3xl font-black flex items-center justify-center min-h-[1.2em]"
+    }, v ? React.createElement(motion.span, {
+      initial: {
+        scale: 0.8,
+        opacity: 0
+      },
+      animate: {
+        scale: 1,
+        opacity: 1
+      },
+      className: "text-black"
+    }, v) : React.createElement("span", {
+      className: "text-orange-200"
+    }, "..."));
+  })));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "h-screen w-screen bg-[#F0F7FF] flex flex-col font-sans select-none overflow-hidden text-slate-800"
+  }, (isSaving || saveStatus) && /*#__PURE__*/React.createElement("div", {
+    className: "fixed top-6 left-1/2 -translate-x-1/2 z-[300] pointer-events-none"
+  }, isSaving && !saveStatus && /*#__PURE__*/React.createElement("div", {
+    className: "bg-slate-800 text-white px-8 py-4 rounded-2xl shadow-2xl text-xl font-black"
+  }, "\uC800\uC7A5\uD558\uB294 \uC911..."), saveStatus === 'success' && /*#__PURE__*/React.createElement("div", {
+    className: "bg-emerald-500 text-white px-8 py-4 rounded-2xl shadow-2xl text-xl font-black flex items-center gap-3"
+  }, /*#__PURE__*/React.createElement(IconCheck, null), " \uC800\uC7A5 \uC644\uB8CC!"), saveStatus === 'error' && /*#__PURE__*/React.createElement("div", {
+    className: "bg-red-500 text-white px-8 py-4 rounded-2xl shadow-2xl text-xl font-black"
+  }, "\uC800\uC7A5 \uC2E4\uD328")), /*#__PURE__*/React.createElement("div", {
+    className: "w-full px-12 pt-8 shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "h-3 bg-white rounded-full border border-slate-200 shadow-inner overflow-hidden flex items-center px-1"
+  }, /*#__PURE__*/React.createElement(motion.div, {
+    animate: {
+      width: prog + "%"
+    },
+    className: "h-2 bg-gradient-to-r from-orange-300 to-orange-500 rounded-full transition-all duration-500"
+  }))), /*#__PURE__*/React.createElement("main", {
+    className: "flex-1 w-full flex flex-col items-center justify-center p-8 overflow-hidden relative"
+  }, /*#__PURE__*/React.createElement(AnimatePresence, {
+    mode: "wait"
+  }, step === 0 && /*#__PURE__*/React.createElement(motion.div, {
+    key: "s0",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "flex flex-col items-center justify-center space-y-8 w-full h-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-center gap-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-8xl"
+  }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("div", {
+    className: "bg-white px-8 py-1 rounded-full border-2 border-orange-100"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-orange-600 font-black text-lg"
+  }, "\uAD6D\uC5B4 1-2\uD559\uB144\uAD70")), /*#__PURE__*/React.createElement("h1", {
+    className: "text-7xl font-black text-[#2D336B] tracking-tighter text-center"
+  }, "\uD55C \uBB38\uC7A5 \uC77C\uAE30\uC4F0\uAE30")), !isGasOk && /*#__PURE__*/React.createElement("div", {
+    className: "w-full max-w-2xl flex items-center gap-3 px-6 py-4 bg-amber-50 border-2 border-amber-200 rounded-2xl text-amber-800 font-bold text-base"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl"
+  }, "\u26A0\uFE0F"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "font-black"
+  }, "\uC120\uC0DD\uB2D8! "), "HTML \uB9E8 \uC704\uC758 GAS_URL\uC744 \uBCF8\uC778\uC758 \uBC30\uD3EC URL\uB85C \uC218\uC815\uD574 \uC8FC\uC138\uC694.")), /*#__PURE__*/React.createElement("div", {
+    className: "bg-white p-10 rounded-[3.5rem] shadow-xl border-4 border-orange-50/50 text-center w-full max-w-2xl"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-4xl font-black text-slate-700 leading-tight"
+  }, "\"\uC624\uB298 \uD558\uB8E8\uC758 \uC18C\uC911\uD55C \uC21C\uAC04\uC744", /*#__PURE__*/React.createElement("br", null), "\uBA4B\uC9C0\uAC8C \uAE30\uB85D\uD574\uBCFC\uAE4C\uC694?\"")), /*#__PURE__*/React.createElement("button", {
+    onClick: goNext,
+    className: "w-full max-w-md py-5 bg-gradient-to-b from-orange-400 to-orange-600 text-white rounded-[2.5rem] text-4xl font-black shadow-[0_10px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none flex items-center justify-center gap-4"
+  }, "\uD65C\uB3D9 \uC2DC\uC791! \u2192")), step === 1 && /*#__PURE__*/React.createElement(motion.div, {
+    key: "s1",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "text-center space-y-6 max-w-2xl w-full flex flex-col justify-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white p-10 rounded-[3rem] shadow-xl border-2 border-orange-100"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-8xl mb-4"
+  }, "\uD83C\uDF99\uFE0F"), /*#__PURE__*/React.createElement("p", {
+    className: "text-4xl font-black text-slate-700"
+  }, "\uC77C\uAE30\uB97C \uB9D0\uD558\uAE30 \uC704\uD574\uC11C", /*#__PURE__*/React.createElement("br", null), "\uB9C8\uC774\uD06C \uAD8C\uD55C\uC774 \uD544\uC694\uD574\uC694!")), /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      navigator.mediaDevices && navigator.mediaDevices.getUserMedia({
+        audio: true
+      }).then(function (s) {
+        s.getTracks().forEach(function (t) {
+          t.stop();
+        });
+        setMicSt("ok");
+        setTimeout(goNext, 800);
+      }).catch(function () {
+        setMicSt("err");
+      });
+    },
+    className: "w-full py-6 rounded-[2.5rem] text-4xl font-black shadow-xl bg-blue-500 text-white active:scale-95"
+  }, micSt === "ok" ? "✅ 준비 완료!" : "🎙️ 마이크 허용하기"), /*#__PURE__*/React.createElement("button", {
+    onClick: goNext,
+    className: "w-full py-4 text-slate-400 font-black text-xl"
+  }, "\uB9C8\uC774\uD06C \uC5C6\uC774 \uACC4\uC18D\uD558\uAE30")), step === 2 && /*#__PURE__*/React.createElement(motion.div, {
+    key: "s2",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "w-full max-w-4xl space-y-8 text-center flex flex-col justify-center px-10"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-8 mb-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-7xl"
+  }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 text-left"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-3xl font-black text-slate-400 mb-2"
+  }, "\uBC18\uAC00\uC6CC! \uB0B4 \uC774\uB984\uC740 \uC5F0\uD544\uC694\uC815\uC774\uC57C."), /*#__PURE__*/React.createElement("p", {
+    className: "text-5xl font-black text-slate-800"
+  }, "\uB108\uC758 \uC774\uB984\uC740 \uBB34\uC5C7\uC774\uB2C8?"))), /*#__PURE__*/React.createElement("div", {
+    className: "relative w-full max-w-2xl mx-auto"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      setIsDropdown(!isDropdown);
+    },
+    className: "w-full p-8 flex items-center justify-between text-4xl font-black bg-white border-4 border-orange-100 rounded-[2.5rem] shadow-xl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "flex items-center gap-6 text-slate-700"
+  }, /*#__PURE__*/React.createElement(IconUserCircle, null), selectedId ? selectedId + "번 " + nickname : "이름 선택하기"), /*#__PURE__*/React.createElement(IconChevDown, null)), isDropdown && /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0,
+      y: -10
+    },
+    animate: {
+      opacity: 1,
+      y: 0
+    },
+    className: "absolute z-50 left-0 right-0 mt-4 bg-white border-4 border-orange-100 rounded-[2.5rem] shadow-2xl max-h-[40vh] overflow-y-auto custom-scrollbar p-4"
+  }, studentList.map(function (s) {
+    return /*#__PURE__*/React.createElement("button", {
+      key: s.id,
+      onClick: function () {
+        setNickname(s.name);
+        setSelectedId(s.id);
+        setIsDropdown(false);
+      },
+      className: "w-full p-6 text-3xl font-black rounded-[1.5rem] mb-2 " + (nickname === s.name ? "bg-orange-500 text-white shadow-lg" : "hover:bg-orange-50 text-slate-600")
+    }, s.id, "\uBC88 ", s.name);
+  }))), /*#__PURE__*/React.createElement("button", {
+    disabled: !nickname,
+    onClick: goNext,
+    className: "w-full py-6 bg-blue-600 text-white rounded-[2.5rem] text-4xl font-black shadow-xl disabled:opacity-50 disabled:grayscale"
+  }, "\uC900\uBE44 \uC644\uB8CC!")), step === 3 && (!drawn ? /*#__PURE__*/React.createElement(motion.div, {
+    key: "s3a",
+    initial: {
+      opacity: 0,
+      scale: 0.95
+    },
+    animate: {
+      opacity: 1,
+      scale: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "w-full h-full flex flex-col items-center gap-5 overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start gap-4 shrink-0 w-full"
+  }, /*#__PURE__*/React.createElement(PencilFairy, {
+    mini: true,
+    className: "shrink-0"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "relative bg-white px-7 py-4 rounded-3xl shadow-xl border-2 border-orange-200 mt-6"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-3xl font-black text-slate-800 leading-tight"
+  }, "\uC624\uB298\uC758 \uC77C\uAE30 \uCE74\uB4DC\uB97C \uBF51\uC544\uBD10\uC694!"), /*#__PURE__*/React.createElement("p", {
+    className: "text-base text-slate-400 font-bold mt-1"
+  }, "20\uC7A5 \uC911 \uD55C \uC7A5\uC744 \uB20C\uB7EC\uBD10\uC694. \uC5B4\uB5A4 \uC774\uC57C\uAE30\uAC00 \uB098\uC62C\uAE4C\uC694?"), /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-8 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 border-orange-200 rotate-45"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 w-full flex gap-3 overflow-hidden"
+  }, ['when', 'where', 'who', 'what'].map(function (cat) {
+    var meta = {
+      when: {
+        label: '언제',
+        emoji: '📅'
+      },
+      where: {
+        label: '어디서',
+        emoji: '📍'
+      },
+      who: {
+        label: '누구와',
+        emoji: '👥'
+      },
+      what: {
+        label: '무엇을',
+        emoji: '🎯'
+      }
+    }[cat];
+    var colKey = {
+      when: 'amber',
+      where: 'blue',
+      who: 'green',
+      what: 'red'
+    }[cat];
+    var col = CC[colKey];
+    return /*#__PURE__*/React.createElement("div", {
+      key: cat,
+      className: "flex-1 flex flex-col gap-2 min-w-0"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "shrink-0 py-3 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-b " + col.f + " " + col.t + " text-white shadow-md"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-2xl"
+    }, meta.emoji), /*#__PURE__*/React.createElement("span", {
+      className: "text-xl font-black"
+    }, meta.label)), /*#__PURE__*/React.createElement("div", {
+      className: "flex-1 flex flex-col gap-2 min-h-0"
+    }, cardGroups[cat].map(function (card, idx) {
+      return /*#__PURE__*/React.createElement(motion.button, {
+        key: cat + idx,
+        onClick: function () {
+          pickCard(card);
+        },
+        whileHover: {
+          scale: 1.04
+        },
+        whileTap: {
+          scale: 0.96
+        },
+        className: "relative rounded-[1.3rem] overflow-hidden shadow-md border-4 border-transparent hover:border-orange-400 focus:outline-none flex-1 min-h-0"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "w-full h-full bg-gradient-to-b from-slate-600 to-slate-900 flex items-center justify-center relative"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "absolute top-0 left-0 right-0 h-2 bg-gradient-to-r " + col.f + " " + col.t
+      }), /*#__PURE__*/React.createElement("span", {
+        className: "text-3xl"
+      }, "\uD83C\uDF1F")));
+    })));
+  })), /*#__PURE__*/React.createElement(AnimatePresence, null, flipped && /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-6",
+    onClick: function () {
+      setFlipped(null);
+    }
+  }, /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      scale: 0.5,
+      opacity: 0
+    },
+    animate: {
+      scale: 1,
+      opacity: 1
+    },
+    exit: {
+      scale: 0.5,
+      opacity: 0
+    },
+    transition: {
+      type: "spring",
+      duration: 0.5
+    },
+    className: "bg-white rounded-[4rem] shadow-2xl p-12 border-[8px] border-orange-300 flex flex-col items-center gap-6 max-w-3xl w-full relative",
+    onClick: function (e) {
+      e.stopPropagation();
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-0 left-0 w-full h-6 bg-gradient-to-r from-orange-400 to-orange-500 rounded-t-[3rem]"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-2xl font-black text-orange-500 mt-2 whitespace-nowrap"
+  }, "\uD83C\uDF89 \uCE74\uB4DC\uB97C \uBF51\uC558\uC5B4\uC694!"), /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      rotateY: 90,
+      scale: 0.5
+    },
+    animate: {
+      rotateY: 0,
+      scale: 1
+    },
+    transition: {
+      delay: 0.2,
+      duration: 0.6
+    },
+    className: "w-72 h-80 bg-gradient-to-b " + CC[flipped.color].f + " " + CC[flipped.color].t + " rounded-[2.5rem] flex flex-col items-center justify-center gap-4 shadow-2xl p-6 border-[6px] border-white/40"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl font-black px-5 py-1.5 rounded-full whitespace-nowrap " + CC[flipped.color].b
+  }, flipped.label), /*#__PURE__*/React.createElement("span", {
+    className: "text-8xl"
+  }, flipped.emoji), /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl font-black text-white text-center leading-tight break-keep"
+  }, flipped.value)), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-4 w-full pt-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      setFlipped(null);
+    },
+    className: "flex-1 py-5 bg-slate-100 text-slate-600 border-2 border-slate-200 rounded-[2rem] text-2xl font-black hover:bg-slate-200 active:scale-95 whitespace-nowrap"
+  }, "\uB2E4\uC2DC \uBF51\uAE30"), /*#__PURE__*/React.createElement("button", {
+    onClick: confirmCard,
+    className: "flex-[2] py-5 bg-orange-500 text-white rounded-[2rem] text-2xl font-black shadow-[0_8px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-[0_4px_0_rgb(154,52,18)] transition-all whitespace-nowrap"
+  }, "\uC774 \uCE74\uB4DC\uB85C \uC77C\uAE30 \uC368\uC694! \u270D\uFE0F")))))) : /*#__PURE__*/React.createElement(motion.div, {
+    key: "s3b" + sub,
+    initial: {
+      opacity: 0,
+      x: 50
+    },
+    animate: {
+      opacity: 1,
+      x: 0
+    },
+    exit: {
+      opacity: 0,
+      x: -50
+    },
+    className: "w-full h-full flex flex-col space-y-3 overflow-hidden"
+  }, DPBar, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 shrink-0 px-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-base font-black text-slate-400"
+  }, "\uD83C\uDFB4 \uBF51\uC740 \uCE74\uB4DC"), /*#__PURE__*/React.createElement("span", {
+    className: "flex items-center gap-2 px-4 py-2 rounded-full text-lg font-black text-white shadow-md bg-gradient-to-r " + CC[drawn.color].f + " " + CC[drawn.color].t
+  }, drawn.emoji, " ", drawn.value), /*#__PURE__*/React.createElement("span", {
+    className: "text-base font-black text-slate-400"
+  }, "\uB098\uBA38\uC9C0\uB97C \uCC44\uC6CC\uBD10\uC694!")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex gap-6 overflow-hidden min-h-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-[18%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-6 border-2 border-orange-50 shadow-lg shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-orange-100 px-6 py-1 rounded-full mb-4 shadow-sm border border-orange-200"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-xl font-black text-orange-600"
+  }, activeOpts[sub].label)), /*#__PURE__*/React.createElement("div", {
+    className: "text-6xl mb-4"
+  }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("p", {
+    className: "text-lg font-black text-slate-500 text-center mb-4"
+  }, activeOpts[sub].fairy), /*#__PURE__*/React.createElement("button", {
+    onClick: goPrev,
+    className: "mt-auto flex items-center justify-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl active:scale-95"
+  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col gap-4 overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col bg-white p-6 rounded-[3rem] border-2 border-slate-50 shadow-xl overflow-hidden"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-xl font-bold text-slate-500 bg-slate-50/50 py-3 px-6 rounded-2xl border border-slate-100 mb-4 inline-block"
+  }, "\uCE74\uB4DC\uC5D0\uC11C \uACE8\uB77C\uBCF4\uAC70\uB098 \uC9C1\uC811 \uC368\uBCF4\uC138\uC694 (", sub + 1, "/", activeOpts.length, ")"), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 overflow-y-auto custom-scrollbar grid grid-cols-5 gap-3 auto-rows-max"
+  }, activeOpts[sub].options.map(function (opt) {
+    return /*#__PURE__*/React.createElement("button", {
+      key: opt,
+      onClick: function () {
+        subDone(opt);
+      },
+      className: "p-4 bg-slate-50 border-4 border-transparent rounded-[1.5rem] text-2xl font-black text-slate-700 hover:border-orange-400 hover:bg-orange-50 hover:shadow-xl active:scale-95 flex items-center justify-center min-h-[5rem] break-keep"
+    }, opt);
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "bg-emerald-50/50 p-6 rounded-[3rem] border-2 border-emerald-100 shadow-xl shrink-0"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-lg font-bold text-slate-500 px-2 mb-3"
+  }, "\uD83C\uDFA4 \uC9C1\uC811 \uC801\uAC70\uB098 \uB179\uC74C \uBC84\uD2BC\uC744 \uB20C\uB7EC\uBD10\uC694!"), /*#__PURE__*/React.createElement("div", {
+    className: "relative w-full"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: interim,
+    onChange: function (e) {
+      setInterim(e.target.value);
+    },
+    onKeyDown: function (e) {
+      if (e.key === 'Enter' && e.target.value) {
+        subDone(e.target.value);
+        setInterim("");
+      }
+    },
+    placeholder: "\uC5EC\uAE30\uC5D0 \uC9C1\uC811 \uC785\uB825\uD558\uC138\uC694...",
+    className: "w-full p-5 pr-[16rem] bg-yellow-100 border-2 rounded-[2rem] text-2xl font-black outline-none " + (listening ? "border-red-400 ring-4 ring-red-50" : "border-slate-100")
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 items-center"
+  }, interim && /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      subDone(interim);
+      setInterim("");
+      stopListen();
+    },
+    className: "px-4 py-3 bg-blue-500 text-white rounded-[1.2rem] shadow-lg active:scale-95 flex items-center gap-2 font-black"
+  }, /*#__PURE__*/React.createElement(IconCheck, null), " \uC785\uB825"), /*#__PURE__*/React.createElement("button", {
+    onClick: toggleListen,
+    className: "p-3 rounded-xl " + (listening ? "bg-red-600 text-white animate-pulse" : "bg-red-500 text-white")
+  }, /*#__PURE__*/React.createElement(IconMic, null))))))))), step === 4 && /*#__PURE__*/React.createElement(motion.div, {
+    key: "s4",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    className: "w-full h-full flex flex-col space-y-4 overflow-hidden py-2"
+  }, DPBar, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex gap-6 overflow-hidden min-h-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-[18%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-6 border-2 border-orange-50 shadow-lg shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-orange-100 px-6 py-1 rounded-full mb-4 shadow-sm border border-orange-200"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-xl font-black text-orange-600"
+  }, "\uC774\uC57C\uAE30 \uB354\uD558\uAE30")), /*#__PURE__*/React.createElement("div", {
+    className: "text-6xl mb-4"
+  }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("button", {
+    onClick: goPrev,
+    className: "mt-auto flex items-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl justify-center active:scale-95"
+  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col bg-emerald-50/50 p-8 rounded-[3.5rem] border-4 border-emerald-100 shadow-xl justify-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-center text-emerald-600 font-black text-3xl mb-4"
+  }, "\uC774\uC57C\uAE30 \uB354\uD558\uAE30 (\uC120\uD0DD \uC0AC\uD56D)"), /*#__PURE__*/React.createElement("textarea", {
+    value: extra,
+    onChange: function (e) {
+      setExtra(e.target.value);
+    },
+    placeholder: "\uB354 \uD558\uACE0 \uC2F6\uC740 \uC774\uC57C\uAE30\uB97C \uC801\uAC70\uB098 \uB9D0\uD574\uBD10\uC694! (\uC5C6\uC73C\uBA74 \uB2E4\uC74C\uC73C\uB85C!)",
+    className: "flex-1 p-8 bg-yellow-100 border-2 rounded-[2.5rem] text-3xl font-black outline-none resize-none text-center placeholder:text-slate-300 min-h-[12rem] " + (listening ? "border-red-200" : "border-orange-50")
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mt-6 flex justify-center"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: goNext,
+    className: "px-16 py-5 bg-orange-500 text-white rounded-[2.5rem] text-4xl font-black shadow-[0_8px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none"
+  }, "\uB2E4\uC74C \uB2E8\uACC4\uB85C"))))), step === 5 && /*#__PURE__*/React.createElement(motion.div, {
+    key: "s5",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    className: "w-full h-full flex gap-6 overflow-hidden py-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-[18%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-6 border-2 border-orange-50 shadow-lg shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-orange-100 px-6 py-1 rounded-full mb-4 shadow-sm border border-orange-200"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-xl font-black text-orange-600"
+  }, "\uB9C8\uC74C \uC2E0\uD638\uB4F1")), /*#__PURE__*/React.createElement("div", {
+    className: "text-6xl mb-4"
+  }, "\uD83D\uDE0A"), /*#__PURE__*/React.createElement("button", {
+    onClick: goPrev,
+    className: "mt-auto flex items-center gap-2 py-3 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-xl justify-center active:scale-95"
+  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col bg-white p-6 rounded-[3.5rem] border-2 border-orange-50 shadow-xl overflow-hidden items-center pt-8"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-3xl font-black text-slate-800 mb-6"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-orange-500"
+  }, "\uC9C0\uAE08 \uB9C8\uC74C\uC758 \uC0C9\uAE54"), "\uC740 \uBB34\uC5C7\uC778\uAC00\uC694?"), /*#__PURE__*/React.createElement("div", {
+    className: "bg-slate-800 p-4 px-10 rounded-[6rem] shadow-xl flex flex-row gap-10 border-[12px] border-slate-700 relative mb-6"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-[-1.2rem] left-1/4 w-4 h-12 bg-slate-700 rounded-full"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-[-1.2rem] right-1/4 w-4 h-12 bg-slate-700 rounded-full"
+  }), FEELINGS.map(function (cat, idx) {
+    var cnt = feelings.filter(function (f) {
+      return cat.items.some(function (i) {
+        return i.label === f.label;
+      });
+    }).length;
+    var isA = activeCat && activeCat.color === cat.color;
+    return /*#__PURE__*/React.createElement("div", {
+      key: idx,
+      className: "flex flex-col items-center gap-2"
+    }, /*#__PURE__*/React.createElement(motion.button, {
+      whileHover: {
+        scale: 1.08
+      },
+      whileTap: {
+        scale: 0.92
+      },
+      onClick: function () {
+        setActiveCat(activeCat && activeCat.color === cat.color ? null : cat);
+      },
+      className: "w-32 h-32 rounded-full border-[8px] border-white/20 shadow-lg relative " + (cat.color === 'red' ? "bg-red-500" : cat.color === 'orange' ? "bg-amber-500" : "bg-emerald-500") + " " + (isA ? "ring-[10px] ring-blue-400 border-white" : "")
+    }, cnt > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "absolute -top-3 -right-3 w-12 h-12 bg-blue-600 text-white rounded-full border-4 border-white flex items-center justify-center text-xl font-black shadow-xl z-20"
+    }, cnt), /*#__PURE__*/React.createElement("div", {
+      className: "absolute top-5 left-8 w-10 h-5 bg-white/40 rounded-full -rotate-[15deg] blur-[1px]"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "text-lg font-black " + (cat.color === 'red' ? "text-red-500" : cat.color === 'orange' ? "text-amber-500" : "text-emerald-500")
+    }, cat.desc.split(' ')[1].replace('(', '').replace(')', '')));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 w-full flex items-center justify-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-orange-50/30 rounded-[3rem] p-6 w-full max-w-5xl border-2 border-dashed border-orange-100 grid grid-cols-6 gap-4 min-h-[10rem] items-center"
+  }, feelings.length > 0 ? feelings.map(function (f, i) {
+    return /*#__PURE__*/React.createElement(motion.div, {
+      initial: {
+        scale: 0
+      },
+      animate: {
+        scale: 1
+      },
+      key: i,
+      className: "flex flex-col items-center bg-white p-3 rounded-[2rem] shadow-md border-2 border-orange-100 relative group justify-center"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-5xl mb-1"
+    }, f.icon), /*#__PURE__*/React.createElement("span", {
+      className: "text-lg font-black text-slate-700 text-center"
+    }, f.label), /*#__PURE__*/React.createElement("button", {
+      onClick: function () {
+        setFeelings(feelings.filter(function (sf) {
+          return sf.label !== f.label;
+        }));
+      },
+      className: "absolute -top-2 -right-2 bg-red-500 text-white w-8 h-8 rounded-full border-2 border-white shadow-md items-center justify-center text-lg opacity-0 group-hover:flex hidden"
+    }, "\xD7"));
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "col-span-full flex flex-col items-center justify-center gap-3 text-slate-400 py-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-6xl text-amber-400 opacity-60"
+  }, "\u2728"), /*#__PURE__*/React.createElement("p", {
+    className: "text-3xl font-black text-center"
+  }, "\uC2E0\uD638\uB4F1\uC744 \uB20C\uB7EC \uB9C8\uC74C\uC744 \uC120\uD0DD\uD574\uC8FC\uC138\uC694")))), /*#__PURE__*/React.createElement(AnimatePresence, null, activeCat && /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "fixed inset-0 z-[150] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-6",
+    onClick: function () {
+      setActiveCat(null);
+    }
+  }, /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      scale: 0.9
+    },
+    animate: {
+      scale: 1
+    },
+    exit: {
+      scale: 0.9
+    },
+    className: "bg-white w-full max-w-5xl rounded-[4rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]",
+    onClick: function (e) {
+      e.stopPropagation();
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-6 flex items-center justify-between text-white " + (activeCat.color === 'red' ? "bg-red-500" : activeCat.color === 'orange' ? "bg-amber-500" : "bg-emerald-500")
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-3xl font-black"
+  }, activeCat.desc), /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      setActiveCat(null);
+    },
+    className: "bg-white/20 p-3 rounded-full text-3xl"
+  }, "\xD7")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 p-6 grid grid-cols-5 gap-4 overflow-y-auto custom-scrollbar"
+  }, activeCat.items.map(function (f) {
+    var isSel = feelings.some(function (sf) {
+      return sf.label === f.label;
+    });
+    return /*#__PURE__*/React.createElement(motion.div, {
+      key: f.label,
+      whileHover: {
+        scale: 1.05
+      },
+      whileTap: {
+        scale: 0.95
+      },
+      onClick: function () {
+        isSel ? setFeelings(feelings.filter(function (sf) {
+          return sf.label !== f.label;
+        })) : setFeelings(feelings.concat([f]));
+      },
+      className: "relative flex flex-col items-center justify-center p-4 rounded-[2rem] border-2 cursor-pointer " + (isSel ? "bg-orange-50 border-orange-400 shadow-lg" : "border-slate-100 bg-white shadow-sm")
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "text-6xl mb-2"
+    }, f.icon), /*#__PURE__*/React.createElement("div", {
+      className: "text-xl font-black text-center " + (isSel ? "text-orange-600" : "text-slate-600")
+    }, f.label), /*#__PURE__*/React.createElement("button", {
+      className: "absolute -top-2 -right-2 w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center text-xl font-black border-2 border-white shadow-lg",
+      onClick: function (e) {
+        e.stopPropagation();
+        setTooltip(f);
+      }
+    }, "?"), isSel && /*#__PURE__*/React.createElement("div", {
+      className: "absolute top-2 left-2 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-lg font-black border border-white shadow-md"
+    }, "\u2713"));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "p-6 bg-slate-50 border-t flex justify-center"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      setActiveCat(null);
+    },
+    className: "px-20 py-4 bg-slate-800 text-white rounded-[2rem] text-3xl font-black shadow-xl active:scale-95"
+  }, "\uC120\uD0DD \uC644\uB8CC"))))), /*#__PURE__*/React.createElement("div", {
+    className: "w-full pt-6 border-t border-slate-100 flex justify-center"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: goNext,
+    disabled: feelings.length === 0,
+    className: "px-24 py-5 rounded-[2.5rem] text-4xl font-black shadow-[0_10px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none " + (feelings.length > 0 ? "bg-orange-500 text-white" : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none")
+  }, "\uAE30\uB85D\uD558\uB7EC \uAC00\uAE30!")))), step === 6 && /*#__PURE__*/React.createElement(motion.div, {
+    key: "s6",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    className: "w-full flex flex-col h-full items-center justify-center py-4 px-6"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start gap-8 w-full max-w-6xl flex-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-[20%] flex flex-col items-center justify-center bg-white rounded-[3rem] p-8 border-2 border-orange-50 shadow-lg shrink-0 h-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-7xl mb-4"
+  }, "\uD83D\uDE0A"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xl font-black text-slate-500 text-center mb-4"
+  }, "\uC65C \uADF8\uB7F0 \uB9C8\uC74C\uC774 \uB4E4\uC5C8\uB294\uC9C0 \uB4E4\uB824\uC904\uB798?"), /*#__PURE__*/React.createElement("button", {
+    onClick: goPrev,
+    className: "mt-auto flex items-center gap-2 py-4 w-full bg-orange-50 text-orange-600 border-2 border-orange-100 rounded-2xl font-black text-2xl justify-center active:scale-95"
+  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uC774\uC804")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 bg-white p-8 rounded-[3.5rem] shadow-xl border-4 border-orange-50 flex flex-col h-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-center mb-6 shrink-0"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-3xl font-black text-slate-800 mb-4"
+  }, "\uC9C0\uAE08 ", /*#__PURE__*/React.createElement("span", {
+    className: "text-orange-500"
+  }, "\uC65C \uC774\uB7F0 \uAE30\uBD84"), "\uC778\uC9C0 \uB4E4\uB824\uC904\uB798\uC694?"), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap justify-center gap-3 bg-orange-50/50 p-4 rounded-[2.5rem] border-2 border-dashed border-orange-100"
+  }, feelings.map(function (f, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border-2 border-orange-200"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-3xl"
+    }, f.icon), /*#__PURE__*/React.createElement("span", {
+      className: "text-xl font-black text-slate-700"
+    }, f.label));
+  }))), /*#__PURE__*/React.createElement("textarea", {
+    value: feelReason,
+    onChange: function (e) {
+      setFeelReason(e.target.value);
+    },
+    placeholder: "\uC5B4\uB5A4 \uC77C\uC774 \uC788\uC5B4\uC11C \uADF8\uB7F0 \uAE30\uBD84\uC774 \uB4E4\uC5C8\uB098\uC694?",
+    className: "flex-1 p-10 bg-yellow-100 border-4 rounded-[3rem] text-4xl font-black outline-none resize-none placeholder:text-slate-300 leading-relaxed min-h-[12rem] " + (listening ? "border-red-200" : "border-orange-100")
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mt-6 shrink-0"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: goNext,
+    className: "w-full py-7 bg-orange-500 text-white rounded-[2.5rem] text-5xl font-black shadow-[0_12px_0_rgb(154,52,18)] active:translate-y-3 active:shadow-none flex items-center justify-center gap-4"
+  }, "\uC77C\uAE30 \uC644\uC131\uD558\uAE30! \u2192"))))), step === 7 && /*#__PURE__*/React.createElement(motion.div, {
+    key: "s7",
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    className: "w-full h-full flex flex-col space-y-6 py-6 px-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-1 gap-6 overflow-hidden min-h-0 w-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    ref: cardRef,
+    className: "flex-[6.5] bg-white p-10 rounded-[3rem] shadow-xl border-[10px] border-orange-400 text-center flex flex-col justify-center items-center overflow-hidden relative min-w-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-orange-400 to-orange-500"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-center gap-6 w-full px-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-center gap-6 flex-wrap w-full bg-orange-50/50 p-4 rounded-[2.5rem] border-2 border-dashed border-orange-100"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 px-5 py-2 bg-white rounded-full border border-orange-200 shadow-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "scale-90 text-orange-600"
+  }, /*#__PURE__*/React.createElement(IconCal, null)), /*#__PURE__*/React.createElement("span", {
+    className: "text-xl font-black text-orange-700"
+  }, today)), /*#__PURE__*/React.createElement("h3", {
+    className: "text-4xl font-black text-slate-800"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-orange-500"
+  }, nickname), "\uC758 \uD55C \uBB38\uC7A5 \uC77C\uAE30"), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 flex-wrap"
+  }, feelings.map(function (f, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md border border-orange-200"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-3xl"
+    }, f.icon), /*#__PURE__*/React.createElement("span", {
+      className: "text-xl font-black text-slate-700"
+    }, f.label));
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "w-full flex-1 flex flex-col justify-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-8 bg-orange-50/30 rounded-[3rem] border-4 border-dashed border-orange-200 min-h-[10rem] flex items-center justify-center"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[2.8rem] font-black text-slate-800 leading-[1.4] break-keep tracking-tight text-center"
+  }, parts.when, " ", parts.where, " ", parts.who, " ", parts.what, ". ", extra, " ", feelReason)))), /*#__PURE__*/React.createElement("div", {
+    className: "mt-6"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: saveImg,
+    disabled: isCapture,
+    className: "flex items-center gap-3 px-8 py-4 bg-slate-800 text-white rounded-2xl font-black text-xl shadow-lg active:scale-95 disabled:opacity-60"
+  }, /*#__PURE__*/React.createElement(IconDownload, null), " \uC77C\uAE30 \uC0AC\uC9C4 \uC800\uC7A5\uD558\uAE30 \uD83D\uDCF8"))), /*#__PURE__*/React.createElement("div", {
+    className: "flex-[3.5] bg-orange-50/50 rounded-[3rem] p-8 border-4 border-orange-100 flex flex-col gap-4 overflow-y-auto custom-scrollbar"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-center mb-2"
+  }, /*#__PURE__*/React.createElement("h4", {
+    className: "text-4xl font-black text-orange-700"
+  }, "\uB098\uC758 \uC77C\uAE30", /*#__PURE__*/React.createElement("br", null), "\uC2A4\uC2A4\uB85C \uD3C9\uAC00\uD558\uAE30")), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col gap-4 flex-1 justify-center"
+  }, [{
+    q: 'q1',
+    text: '1. 경험한 일을\n자세히 썼나요?'
+  }, {
+    q: 'q2',
+    text: '2. 생각이나 느낌을\n문장으로 썼나요?'
+  }].map(function (item) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: item.q,
+      className: "flex flex-col gap-3 bg-white px-6 py-5 rounded-3xl shadow-sm border border-orange-50"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-2xl font-black text-slate-700 text-center whitespace-pre-line"
+    }, item.text), /*#__PURE__*/React.createElement("div", {
+      className: "flex justify-center gap-4"
+    }, [1, 2, 3].map(function (s) {
+      return /*#__PURE__*/React.createElement("button", {
+        key: s,
+        onClick: function () {
+          var e = {};
+          e[item.q] = s;
+          setEval(function (p) {
+            return Object.assign({}, p, e);
+          });
+        },
+        className: "text-[3.5rem] leading-none hover:scale-110 active:scale-95 transition-all " + (eval_[item.q] >= s ? "text-yellow-400" : "text-slate-200")
+      }, "\u2605");
+    })));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-center gap-3 py-3 rounded-2xl text-base font-black " + (isSaving ? "bg-slate-100 text-slate-500" : saveStatus === 'success' ? "bg-emerald-100 text-emerald-700" : saveStatus === 'error' ? "bg-red-100 text-red-600" : saved ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400")
+  }, isSaving && "저장하는 중...", !isSaving && saveStatus === 'success' && "✅ 저장 완료!", !isSaving && saveStatus === 'error' && "⚠️ 저장 실패", !isSaving && !saveStatus && saved && "✅ 저장됨", !isSaving && !saveStatus && !saved && "⭐ 별점을 선택하면 자동 저장됩니다"))), /*#__PURE__*/React.createElement("div", {
+    className: "shrink-0 flex justify-center pb-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: reset,
+    className: "flex items-center gap-2 py-1 text-slate-400 font-black text-lg hover:text-orange-500"
+  }, /*#__PURE__*/React.createElement(IconRotateCcw, null), " \uB2E4\uC2DC \uC4F0\uAE30"))))), /*#__PURE__*/React.createElement(AnimatePresence, null, tooltip && /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "fixed inset-0 z-[160] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6",
+    onClick: function () {
+      setTooltip(null);
+    }
+  }, /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      scale: 0.9
+    },
+    animate: {
+      scale: 1
+    },
+    exit: {
+      scale: 0.9
+    },
+    className: "bg-white w-full max-w-3xl rounded-[4rem] shadow-2xl p-12 border-8 border-orange-50 relative",
+    onClick: function (e) {
+      e.stopPropagation();
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-10"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-center shrink-0 border-r-4 border-slate-50 pr-10"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-[9rem] leading-none"
+  }, tooltip.icon), /*#__PURE__*/React.createElement("h3", {
+    className: "text-4xl font-black text-slate-800 mt-4"
+  }, "\"", tooltip.label, "\"")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 space-y-6"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    className: "text-orange-600 font-bold text-xl mb-2"
+  }, "\uC774\uB7F0 \uB9C8\uC74C\uC774\uC5D0\uC694"), /*#__PURE__*/React.createElement("p", {
+    className: "text-3xl font-black text-slate-700"
+  }, tooltip.def)), /*#__PURE__*/React.createElement("div", {
+    className: "pt-6 border-t-2 border-orange-200/30"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-blue-500 font-bold text-xl mb-2"
+  }, "\uC774\uB7F4 \uB54C \uC368\uC694!"), /*#__PURE__*/React.createElement("p", {
+    className: "text-2xl font-bold italic text-slate-600 bg-white p-5 rounded-2xl border border-blue-50"
+  }, "\"", tooltip.eg, "\"")), /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      setTooltip(null);
+    },
+    className: "w-full py-5 bg-orange-500 text-white rounded-[2.5rem] font-black text-3xl shadow-xl active:scale-95"
+  }, "\uC54C\uACA0\uC5B4\uC694!")))))), /*#__PURE__*/React.createElement(AnimatePresence, null, showInst && step === 3 && drawn && activeOpts[sub] && /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      opacity: 0
+    },
+    animate: {
+      opacity: 1
+    },
+    exit: {
+      opacity: 0
+    },
+    className: "fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm"
+  }, /*#__PURE__*/React.createElement(motion.div, {
+    initial: {
+      scale: 0.9
+    },
+    animate: {
+      scale: 1
+    },
+    exit: {
+      scale: 0.9
+    },
+    className: "bg-white rounded-[4rem] shadow-2xl max-w-4xl w-full p-12 border-[6px] border-orange-300 relative overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-0 left-0 w-full h-6 bg-gradient-to-r from-orange-400 to-orange-500"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-center text-center space-y-10"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "space-y-6 w-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "inline-block py-3 px-10 bg-orange-100 text-orange-600 rounded-full font-black text-4xl shadow-sm border-2 border-orange-200"
+  }, activeOpts[sub].label, " (", sub + 1, "/", activeOpts.length, ")"), /*#__PURE__*/React.createElement("h2", {
+    className: "text-6xl font-black text-slate-800 break-keep leading-tight"
+  }, activeOpts[sub].fairy), /*#__PURE__*/React.createElement("div", {
+    className: "text-4xl font-bold text-slate-500 bg-slate-50 p-10 rounded-[3rem] border-4 border-dashed border-slate-200 leading-relaxed"
+  }, activeOpts[sub].ins)), /*#__PURE__*/React.createElement("button", {
+    onClick: function () {
+      setShowInst(false);
+    },
+    className: "px-16 py-5 bg-orange-500 text-white rounded-[2rem] text-3xl font-black shadow-[0_8px_0_rgb(154,52,18)] active:translate-y-2 active:shadow-none"
+  }, "\uB124, \uC54C\uACA0\uC5B4\uC694!"))))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script></body></html>
