@@ -1664,7 +1664,7 @@ const FEELINGS = [{
     eg: '강아지가 사랑스러웠다.'
   }]
 }];
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyVUI6T0nBlg5F3_SL7EmGZ-MB15WIw74YcXj-j0YF6rWqn98_j3RXnczOjCjWuV0A3qQ/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyTCJS_7LMoTa0U9ZVXdOM4KUZw6V4ntYVc5CWNqLf-egVIG31OSwkGrJkeFNtg0zxRzg/exec";
 const isGasOk = GAS_URL.indexOf("script.google.com") !== -1 && GAS_URL.indexOf("여기에") === -1;
 const DUMMY = [{
   id: 1,
@@ -2631,11 +2631,13 @@ function App() {
     className: "flex items-center gap-1.5 px-4 py-3 bg-slate-100 text-slate-500 border-2 border-slate-200 rounded-2xl font-black text-lg hover:bg-slate-200 active:scale-95 whitespace-nowrap"
   }, "\uAC74\uB108\uB6F0\uAE30"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
-      stopListen();
-      goNext();
+      if (extra) {
+        stopListen();
+        goNext();
+      }
     },
-    className: "ml-auto flex items-center gap-1.5 px-6 py-3 bg-orange-500 text-white rounded-2xl font-black text-lg shadow-[0_4px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-none whitespace-nowrap"
-  }, /*#__PURE__*/React.createElement(IconCheck, null), " \uB2E4\uC74C \uB2E8\uACC4\uB85C")))), step === 5 && /*#__PURE__*/React.createElement(motion.div, {
+    className: "ml-auto flex items-center gap-1.5 px-6 py-3 rounded-2xl font-black text-lg whitespace-nowrap " + (extra ? "bg-orange-500 text-white shadow-[0_4px_0_rgb(154,52,18)] hover:brightness-105 active:translate-y-1 active:shadow-none" : "bg-orange-200 text-orange-400 cursor-not-allowed")
+  }, /*#__PURE__*/React.createElement(IconCheck, null), " \uC644\uB8CC")))), step === 5 && /*#__PURE__*/React.createElement(motion.div, {
     key: "s5",
     initial: {
       opacity: 0
