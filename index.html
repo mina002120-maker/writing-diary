@@ -14,13 +14,56 @@
 <style>
 .custom-scrollbar::-webkit-scrollbar{display:none}
 .custom-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-body{font-family:'Gowun Dodum',sans-serif;height:100vh;width:100vw;overflow:hidden;margin:0;background:#F0F7FF}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden}
+body{
+  font-family:'Gowun Dodum',sans-serif;
+  background:#1e293b;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#scale-canvas{
+  width:1280px;
+  height:800px;
+  flex-shrink:0;
+  flex-grow:0;
+  transform-origin:center center;
+  position:relative;
+  background:#F0F7FF;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+}
+#root{
+  width:100%;
+  height:100%;
+  position:relative;
+}
 @keyframes pulse{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
 .animate-pulse{animation:pulse 1.5s infinite}
 </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="scale-canvas"><div id="root"></div></div>
+<script>
+/* 스케일 반응형 - 1280x800 고정 캔버스를 화면에 맞춰 비율 유지 스케일 */
+(function(){
+  var BASE_W=1280, BASE_H=800;
+  function updateScale(){
+    var canvas=document.getElementById('scale-canvas');
+    if(!canvas)return;
+    var sw=window.innerWidth, sh=window.innerHeight;
+    var scale=Math.min(sw/BASE_W, sh/BASE_H);
+    canvas.style.transform='scale('+scale+')';
+  }
+  window.addEventListener('resize',updateScale);
+  window.addEventListener('orientationchange',updateScale);
+  updateScale();
+  /* 글꼴 로드 후 재계산 */
+  setTimeout(updateScale,100);
+  setTimeout(updateScale,500);
+})();
+</script>
 <script>
 /* ── 아이콘 ── */
 const IconDownload = () => React.createElement("svg", {
@@ -1664,7 +1707,7 @@ const FEELINGS = [{
     eg: '강아지가 사랑스러웠다.'
   }]
 }];
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyTCJS_7LMoTa0U9ZVXdOM4KUZw6V4ntYVc5CWNqLf-egVIG31OSwkGrJkeFNtg0zxRzg/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzO8brqyDWzsVnoEHSlttxyRoo7KnRKw9Ci7w9eeH1TFgtuCxbgh4R2KnBOA1Af6GN_6g/exec";
 const isGasOk = GAS_URL.indexOf("script.google.com") !== -1 && GAS_URL.indexOf("여기에") === -1;
 const DUMMY = [{
   id: 1,
@@ -2115,7 +2158,7 @@ function App() {
     }));
   })))));
   return /*#__PURE__*/React.createElement("div", {
-    className: "h-screen w-screen bg-[#F0F7FF] flex flex-col font-sans select-none overflow-hidden text-slate-800"
+    className: "h-full w-full bg-[#F0F7FF] flex flex-col font-sans select-none overflow-hidden text-slate-800"
   }, (isSaving || saveStatus) && /*#__PURE__*/React.createElement("div", {
     className: "fixed top-6 left-1/2 -translate-x-1/2 z-[300] pointer-events-none"
   }, isSaving && !saveStatus && /*#__PURE__*/React.createElement("div", {
