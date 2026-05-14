@@ -16,29 +16,9 @@
 .custom-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden}
-body{
-  font-family:'Gowun Dodum',sans-serif;
-  background:#1e293b;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-#scale-canvas{
-  width:1280px;
-  height:800px;
-  flex-shrink:0;
-  flex-grow:0;
-  transform-origin:center center;
-  position:relative;
-  background:#F0F7FF;
-  overflow:hidden;
-  box-shadow:0 20px 60px rgba(0,0,0,0.3);
-}
-#root{
-  width:100%;
-  height:100%;
-  position:relative;
-}
+body{font-family:'Gowun Dodum',sans-serif;background:#1e293b;display:flex;align-items:center;justify-content:center}
+#scale-canvas{width:1280px;height:800px;flex-shrink:0;flex-grow:0;transform-origin:center center;position:relative;background:#F0F7FF;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+#root{width:100%;height:100%;position:relative}
 @keyframes pulse{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
 .animate-pulse{animation:pulse 1.5s infinite}
 </style>
@@ -46,22 +26,18 @@ body{
 <body>
 <div id="scale-canvas"><div id="root"></div></div>
 <script>
-/* 스케일 반응형 - 1280x800 고정 캔버스를 화면에 맞춰 비율 유지 스케일 */
 (function(){
   var BASE_W=1280, BASE_H=800;
   function updateScale(){
     var canvas=document.getElementById('scale-canvas');
     if(!canvas)return;
-    var sw=window.innerWidth, sh=window.innerHeight;
-    var scale=Math.min(sw/BASE_W, sh/BASE_H);
+    var scale=Math.min(window.innerWidth/BASE_W, window.innerHeight/BASE_H);
     canvas.style.transform='scale('+scale+')';
   }
   window.addEventListener('resize',updateScale);
   window.addEventListener('orientationchange',updateScale);
   updateScale();
-  /* 글꼴 로드 후 재계산 */
-  setTimeout(updateScale,100);
-  setTimeout(updateScale,500);
+  setTimeout(updateScale,100); setTimeout(updateScale,500);
 })();
 </script>
 <script>
@@ -368,6 +344,28 @@ function PencilFairy({
   }, isListening ? "🎙️ 듣고 있어요!" : speech), /*#__PURE__*/React.createElement("div", {
     className: "absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 " + (isListening ? "border-red-400" : "border-orange-200") + " rotate-45"
   }))));
+}
+
+/* HighlightedFairy: 텍스트에서 keyword를 형광펜으로 강조 */
+function HL({
+  children
+}) {
+  return React.createElement('span', {
+    style: {
+      background: 'linear-gradient(transparent 55%, #fde047 55%, #fde047 90%, transparent 90%)',
+      padding: '0 4px',
+      fontWeight: 900
+    }
+  }, children);
+}
+function HighlightedText({
+  text,
+  keyword
+}) {
+  if (!keyword) return text;
+  var idx = text.indexOf(keyword);
+  if (idx === -1) return text;
+  return React.createElement(React.Fragment, null, text.substring(0, idx), React.createElement(HL, null, keyword), text.substring(idx + keyword.length));
 }
 const CARD_POOL = [/* ── 언제 (30개) ── */
 {
@@ -1529,26 +1527,30 @@ function optsFor(k) {
 const DIARY_OPTS = [{
   key: 'when',
   label: '언제?',
+  keyword: '언제',
   fairy: '언제 있었던 일이야?',
   ins: '언제 있었던 일인지 카드에서 골라봐요!',
   options: optsFor('when')
 }, {
   key: 'where',
   label: '어디서?',
+  keyword: '어디에서',
   fairy: '어디에서 일어났니?',
-  ins: '어디서 있었던 일인지 카드에서 골라봐요!',
+  ins: '어디에서 있었던 일인지 카드에서 골라봐요!',
   options: optsFor('where')
 }, {
   key: 'who',
   label: '누구와?',
-  fairy: '누구랑 같이 있었어?',
+  keyword: '누구와',
+  fairy: '누구와 같이 있었어?',
   ins: '누구와 있었는지 카드에서 골라봐요!',
   options: optsFor('who')
 }, {
   key: 'what',
   label: '무엇을?',
-  fairy: '어떤 일을 했니?',
-  ins: '어떤 일을 했는지 카드에서 골라봐요!',
+  keyword: '무엇을',
+  fairy: '무엇을 했니?',
+  ins: '무엇을 했는지 카드에서 골라봐요!',
   options: optsFor('what')
 }];
 const FEELINGS = [{
@@ -1707,7 +1709,7 @@ const FEELINGS = [{
     eg: '강아지가 사랑스러웠다.'
   }]
 }];
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzO8brqyDWzsVnoEHSlttxyRoo7KnRKw9Ci7w9eeH1TFgtuCxbgh4R2KnBOA1Af6GN_6g/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxGVqCAAYXsTfmLueQPrLaBjRI9ZdCAYId_vs4CA7unflEMSy2_V41NaRnOddql3PlwWA/exec";
 const isGasOk = GAS_URL.indexOf("script.google.com") !== -1 && GAS_URL.indexOf("여기에") === -1;
 const DUMMY = [{
   id: 1,
@@ -1747,6 +1749,7 @@ function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
   const [listening, setListening] = useState(false);
+  const [hasRecorded, setHasRecorded] = useState(false); /* 녹음 버튼이 한 번이라도 눌렸는지 */
   const [interim, setInterim] = useState("");
   const [today, setToday] = useState("");
   const [micSt, setMicSt] = useState("idle");
@@ -1823,6 +1826,7 @@ function App() {
   function goNext() {
     stopListen();
     setInterim("");
+    setHasRecorded(false);
     setStep(function (s) {
       return s + 1;
     });
@@ -1833,6 +1837,7 @@ function App() {
   function goPrev() {
     stopListen();
     setInterim("");
+    setHasRecorded(false);
     if (step === 3 && drawn && sub > 0) {
       setSub(function (s) {
         return s - 1;
@@ -1877,6 +1882,7 @@ function App() {
     setInterim("");
     setShowHint(false);
     stopListen();
+    setHasRecorded(false);
     if (sub < activeOpts.length - 1) {
       setSub(function (s) {
         return s + 1;
@@ -1896,6 +1902,7 @@ function App() {
     });
     setInterim("");
     setShowHint(false);
+    setHasRecorded(false);
     if (sub < activeOpts.length - 1) {
       setSub(function (s) {
         return s + 1;
@@ -1944,6 +1951,7 @@ function App() {
       }
     };
     if (listening) recRef.current.stop();else {
+      setHasRecorded(true);
       try {
         recRef.current.start();
       } catch (e) {}
@@ -2511,7 +2519,7 @@ function App() {
   }, DPBar, /*#__PURE__*/React.createElement("div", {
     className: "flex-1 flex gap-4 overflow-hidden min-h-0"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-3 overflow-hidden transition-all duration-300 " + (showHint ? "w-5/12" : "flex-1")
+    className: "flex flex-col gap-3 overflow-hidden transition-all duration-300 " + (showHint ? "w-1/2" : "flex-1")
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-start gap-3 shrink-0"
   }, /*#__PURE__*/React.createElement(PencilFairy, {
@@ -2527,14 +2535,17 @@ function App() {
       opacity: 1,
       x: 0
     },
-    className: "relative mt-4 bg-white px-6 py-3 rounded-3xl shadow-md border-2 " + (listening ? "border-red-400 ring-4 ring-red-50" : "border-orange-200")
+    className: "relative mt-4 bg-white px-6 py-3 rounded-3xl shadow-md border-2 flex-1 min-w-0 " + (listening ? "border-red-400 ring-4 ring-red-50" : "border-orange-200")
   }, /*#__PURE__*/React.createElement("p", {
-    className: "text-3xl font-bold leading-tight whitespace-nowrap " + (listening ? "text-red-500" : "text-slate-800")
-  }, listening ? "🎙️ 듣고 있어요!" : "스스로 떠올려봐요! " + activeOpts[sub].fairy), !listening && /*#__PURE__*/React.createElement("p", {
-    className: "text-base font-bold text-slate-500 mt-1 whitespace-nowrap"
+    className: "text-3xl font-bold leading-tight break-keep " + (listening ? "text-red-500" : "text-slate-800")
+  }, listening ? "🎙️ 듣고 있어요!" : React.createElement(React.Fragment, null, "스스로 떠올려봐요! ", React.createElement(HighlightedText, {
+    text: activeOpts[sub].fairy,
+    keyword: activeOpts[sub].keyword
+  }))), !listening && !showHint && /*#__PURE__*/React.createElement("p", {
+    className: "text-xl font-bold text-slate-500 mt-1 break-keep"
   }, "\uC5B4\uB824\uC6B0\uBA74 ", /*#__PURE__*/React.createElement("span", {
     className: "text-amber-700 font-black bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200"
-  }, "\uD83D\uDD0D \uD78C\uD2B8 \uBCF4\uAE30"), "\uB97C \uB20C\uB7EC\uBD10!"), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDD0D \uD78C\uD2B8"), "\uB97C \uB20C\uB7EC\uBD10!"), /*#__PURE__*/React.createElement("div", {
     className: "absolute top-8 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 " + (listening ? "border-red-400" : "border-orange-200") + " rotate-45"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "flex-1 bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 shadow-xl flex flex-col gap-4 overflow-hidden min-h-0"
@@ -2562,8 +2573,10 @@ function App() {
     onClick: toggleListen,
     className: "flex items-center gap-1.5 px-4 py-3 rounded-2xl font-black text-lg shadow-md whitespace-nowrap " + (listening ? "bg-red-600 text-white animate-pulse" : "bg-red-500 text-white hover:bg-red-600")
   }, /*#__PURE__*/React.createElement(IconMic, null), " ", listening ? "녹음 중" : "녹음"), /*#__PURE__*/React.createElement("button", {
-    onClick: skipSub,
-    className: "flex items-center gap-1.5 px-4 py-3 bg-slate-100 text-slate-500 border-2 border-slate-200 rounded-2xl font-black text-lg hover:bg-slate-200 active:scale-95 whitespace-nowrap"
+    onClick: function () {
+      if (hasRecorded && interim) skipSub();
+    },
+    className: "flex items-center gap-1.5 px-4 py-3 border-2 rounded-2xl font-black text-lg whitespace-nowrap " + (hasRecorded && interim ? "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 active:scale-95" : "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed")
   }, "\uAC74\uB108\uB6F0\uAE30"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       setShowHint(!showHint);
@@ -2667,11 +2680,13 @@ function App() {
     className: "flex items-center gap-1.5 px-4 py-3 rounded-2xl font-black text-lg shadow-md whitespace-nowrap " + (listening ? "bg-red-600 text-white animate-pulse" : "bg-red-500 text-white hover:bg-red-600")
   }, /*#__PURE__*/React.createElement(IconMic, null), " ", listening ? "녹음 중" : "녹음"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
-      stopListen();
-      setExtra("");
-      goNext();
+      if (hasRecorded && extra) {
+        stopListen();
+        setExtra("");
+        goNext();
+      }
     },
-    className: "flex items-center gap-1.5 px-4 py-3 bg-slate-100 text-slate-500 border-2 border-slate-200 rounded-2xl font-black text-lg hover:bg-slate-200 active:scale-95 whitespace-nowrap"
+    className: "flex items-center gap-1.5 px-4 py-3 border-2 rounded-2xl font-black text-lg whitespace-nowrap " + (hasRecorded && extra ? "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 active:scale-95" : "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed")
   }, "\uAC74\uB108\uB6F0\uAE30"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       if (extra) {
@@ -2913,11 +2928,13 @@ function App() {
     className: "flex items-center gap-1.5 px-5 py-4 rounded-2xl font-black text-xl shadow-md whitespace-nowrap " + (listening ? "bg-red-600 text-white animate-pulse" : "bg-red-500 text-white hover:bg-red-600")
   }, /*#__PURE__*/React.createElement(IconMic, null), " ", listening ? "녹음 중" : "녹음"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
-      stopListen();
-      setFeelReason("");
-      goNext();
+      if (hasRecorded && feelReason) {
+        stopListen();
+        setFeelReason("");
+        goNext();
+      }
     },
-    className: "flex items-center gap-1.5 px-5 py-4 bg-slate-100 text-slate-500 border-2 border-slate-200 rounded-2xl font-black text-xl hover:bg-slate-200 active:scale-95 whitespace-nowrap"
+    className: "flex items-center gap-1.5 px-5 py-4 border-2 rounded-2xl font-black text-xl whitespace-nowrap " + (hasRecorded && feelReason ? "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 active:scale-95" : "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed")
   }, "\uAC74\uB108\uB6F0\uAE30"), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       stopListen();
@@ -3124,9 +3141,15 @@ function App() {
     className: "inline-block py-3 px-10 bg-orange-100 text-orange-600 rounded-full font-black text-4xl shadow-sm border-2 border-orange-200"
   }, activeOpts[sub].label, " (", sub + 1, "/", activeOpts.length, ")"), /*#__PURE__*/React.createElement("h2", {
     className: "text-6xl font-black text-slate-800 break-keep leading-tight"
-  }, activeOpts[sub].fairy), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(HighlightedText, {
+    text: activeOpts[sub].fairy,
+    keyword: activeOpts[sub].keyword
+  })), /*#__PURE__*/React.createElement("div", {
     className: "text-4xl font-bold text-slate-500 bg-slate-50 p-10 rounded-[3rem] border-4 border-dashed border-slate-200 leading-relaxed"
-  }, activeOpts[sub].ins)), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement(HighlightedText, {
+    text: activeOpts[sub].ins,
+    keyword: activeOpts[sub].keyword
+  }))), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       setShowInst(false);
     },
